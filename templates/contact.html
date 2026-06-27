@@ -1,0 +1,1058 @@
+{% extends "base.html" %}
+
+{% block content %}
+<style>
+/* ... სტილები იგივეა რაც წინა ... */
+:root {
+    --gold: #D4AF37;
+    --gold-dark: #996515;
+    --gold-light: #F3E5AB;
+    --dark: #1a1a1a;
+    --text: #4a4a4a;
+    --text-light: #7a7a7a;
+    --card-bg: #ffffff;
+    --shadow-gold: 0 15px 35px rgba(212, 175, 55, 0.12);
+    --shadow-lg: 0 25px 45px -12px rgba(0, 0, 0, 0.15);
+    --transition: all 0.4s cubic-bezier(0.2, 0.9, 0.4, 1.1);
+}
+
+.contact-page {
+    max-width: 1200px;
+    margin: 40px auto;
+    padding: 0 20px;
+}
+
+.contact-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 50px;
+    margin-top: 30px;
+}
+
+@media (max-width: 900px) {
+    .contact-grid {
+        grid-template-columns: 1fr;
+        gap: 40px;
+    }
+}
+
+.contact-info {
+    padding-right: 30px;
+}
+
+.contact-info h2 {
+    font-size: 36px;
+    font-family: 'Cormorant Garamond', serif;
+    color: var(--dark);
+    margin-bottom: 15px;
+}
+
+.contact-info .subtitle {
+    color: var(--text-light);
+    font-size: 16px;
+    line-height: 1.7;
+    margin-bottom: 30px;
+}
+
+.info-cards {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.info-card-item {
+    display: flex;
+    gap: 18px;
+    align-items: flex-start;
+    padding: 18px 20px;
+    background: white;
+    border-radius: 16px;
+    border: 1px solid rgba(212,175,55,0.1);
+    transition: var(--transition);
+}
+
+.info-card-item:hover {
+    border-color: var(--gold);
+    box-shadow: var(--shadow-gold);
+}
+
+.info-icon {
+    width: 50px;
+    height: 50px;
+    background: rgba(212,175,55,0.08);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--gold);
+    font-size: 20px;
+    flex-shrink: 0;
+}
+
+.info-text h4 {
+    margin: 0 0 5px 0;
+    font-size: 16px;
+    color: var(--dark);
+}
+
+.info-text p {
+    margin: 0;
+    color: var(--text-light);
+    font-size: 14px;
+}
+
+.chat-container {
+    background: white;
+    border-radius: 24px;
+    border: 1px solid rgba(212,175,55,0.12);
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    height: 550px;
+    box-shadow: var(--shadow-sm);
+}
+
+.chat-header {
+    padding: 18px 24px;
+    background: linear-gradient(135deg, #faf8f4, #f5f2eb);
+    border-bottom: 1px solid rgba(212,175,55,0.15);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.chat-header-left {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.chat-header-left .status-dot {
+    width: 10px;
+    height: 10px;
+    background: #4CAF50;
+    border-radius: 50%;
+    animation: pulse-dot 2s infinite;
+}
+
+@keyframes pulse-dot {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.3; }
+}
+
+.chat-header-left h3 {
+    margin: 0;
+    font-size: 18px;
+    color: var(--dark);
+}
+
+.chat-header-left small {
+    font-size: 12px;
+    color: var(--text-light);
+}
+
+.chat-user-info {
+    font-size: 13px;
+    color: var(--text-light);
+    text-align: right;
+}
+
+.chat-user-info strong {
+    color: var(--dark);
+    display: block;
+}
+
+.messages-area {
+    flex: 1;
+    padding: 20px 24px;
+    overflow-y: auto;
+    background: #fafafa;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.message-bubble {
+    max-width: 80%;
+    padding: 10px 16px;
+    border-radius: 16px;
+    font-size: 14px;
+    line-height: 1.5;
+}
+
+.message-bubble.user {
+    align-self: flex-end;
+    background: linear-gradient(135deg, var(--gold), var(--gold-dark));
+    color: white;
+    border-bottom-right-radius: 4px;
+}
+
+.message-bubble.admin {
+    align-self: flex-start;
+    background: white;
+    color: var(--dark);
+    border-bottom-left-radius: 4px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+}
+
+.message-bubble .msg-time {
+    font-size: 10px;
+    opacity: 0.7;
+    margin-top: 4px;
+    display: block;
+    text-align: right;
+}
+
+.message-bubble .msg-sender {
+    font-size: 11px;
+    font-weight: 600;
+    display: block;
+    margin-bottom: 3px;
+}
+
+.message-bubble.user .msg-sender {
+    color: rgba(255,255,255,0.8);
+}
+
+.message-bubble.admin .msg-sender {
+    color: var(--gold-dark);
+}
+
+.voice-msg {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-top: 5px;
+}
+
+.voice-msg audio {
+    max-width: 180px;
+    height: 36px;
+}
+
+.file-msg {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 5px;
+    padding: 6px 12px;
+    background: rgba(255,255,255,0.15);
+    border-radius: 8px;
+}
+
+.file-msg i {
+    font-size: 18px;
+}
+
+.file-msg a {
+    color: inherit;
+    text-decoration: underline;
+}
+
+.message-bubble.admin .file-msg {
+    background: rgba(212,175,55,0.08);
+}
+
+.message-bubble.user .file-msg {
+    background: rgba(255,255,255,0.15);
+}
+
+.typing-indicator {
+    align-self: flex-start;
+    padding: 8px 16px;
+    background: white;
+    border-radius: 16px;
+    display: flex;
+    gap: 4px;
+    align-items: center;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+}
+
+.typing-dot {
+    width: 8px;
+    height: 8px;
+    background: #999;
+    border-radius: 50%;
+    animation: typing 1.4s infinite;
+}
+
+.typing-dot:nth-child(2) { animation-delay: 0.2s; }
+.typing-dot:nth-child(3) { animation-delay: 0.4s; }
+
+@keyframes typing {
+    0%, 60%, 100% { transform: translateY(0); opacity: 0.5; }
+    30% { transform: translateY(-8px); opacity: 1; }
+}
+
+.chat-input-area {
+    padding: 16px 24px;
+    background: white;
+    border-top: 1px solid rgba(212,175,55,0.1);
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.chat-input-row {
+    display: flex;
+    gap: 8px;
+    align-items: flex-end;
+}
+
+.chat-input-row textarea {
+    flex: 1;
+    padding: 10px 16px;
+    border: 1px solid #e5e5e5;
+    border-radius: 24px;
+    resize: none;
+    font-family: inherit;
+    font-size: 14px;
+    min-height: 44px;
+    max-height: 100px;
+    transition: var(--transition);
+}
+
+.chat-input-row textarea:focus {
+    outline: none;
+    border-color: var(--gold);
+}
+
+.chat-input-row .btn-send {
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--gold), var(--gold-dark));
+    border: none;
+    color: white;
+    cursor: pointer;
+    transition: var(--transition);
+    flex-shrink: 0;
+}
+
+.chat-input-row .btn-send:hover {
+    transform: scale(1.05);
+    box-shadow: var(--shadow-gold);
+}
+
+.chat-input-row .btn-send:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.chat-tools {
+    display: flex;
+    gap: 5px;
+}
+
+.tool-btn {
+    background: none;
+    border: 1px solid #e5e5e5;
+    border-radius: 50%;
+    width: 36px;
+    height: 36px;
+    cursor: pointer;
+    color: #999;
+    transition: var(--transition);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.tool-btn:hover {
+    border-color: var(--gold);
+    color: var(--gold);
+}
+
+.tool-btn.recording {
+    border-color: #dc3545;
+    color: #dc3545;
+    animation: pulse-border 1s infinite;
+}
+
+@keyframes pulse-border {
+    0%, 100% { box-shadow: 0 0 0 0 rgba(220,53,69,0.3); }
+    50% { box-shadow: 0 0 0 8px rgba(220,53,69,0); }
+}
+
+.voice-recording-indicator {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 8px 16px;
+    background: #fee;
+    border-radius: 30px;
+}
+
+.recording-dot {
+    width: 10px;
+    height: 10px;
+    background: #dc3545;
+    border-radius: 50%;
+    animation: pulse-dot 1s infinite;
+}
+
+.recording-timer {
+    font-weight: 600;
+    color: #dc3545;
+}
+
+.recording-cancel {
+    background: none;
+    border: none;
+    color: #dc3545;
+    cursor: pointer;
+    font-size: 16px;
+    margin-left: auto;
+}
+
+.file-preview {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 5px;
+}
+
+.file-preview-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 4px 12px;
+    background: #f0f0f0;
+    border-radius: 20px;
+    font-size: 12px;
+}
+
+.file-preview-item .remove-file {
+    background: none;
+    border: none;
+    color: #dc3545;
+    cursor: pointer;
+    font-size: 14px;
+}
+
+.user-identify-form {
+    padding: 16px 24px;
+    background: #f8f6f2;
+    border-top: 1px solid rgba(212,175,55,0.1);
+}
+
+.user-identify-form .form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+}
+
+.user-identify-form input {
+    padding: 10px 14px;
+    border: 1px solid #e5e5e5;
+    border-radius: 12px;
+    font-size: 14px;
+    width: 100%;
+}
+
+.user-identify-form input:focus {
+    outline: none;
+    border-color: var(--gold);
+}
+
+.user-identify-form .btn-start {
+    padding: 10px 24px;
+    background: linear-gradient(135deg, var(--gold), var(--gold-dark));
+    color: white;
+    border: none;
+    border-radius: 12px;
+    cursor: pointer;
+    font-weight: 500;
+    width: 100%;
+    margin-top: 10px;
+}
+
+.user-identify-form .btn-start:hover {
+    box-shadow: var(--shadow-gold);
+}
+
+.identify-message {
+    text-align: center;
+    padding: 20px;
+    color: var(--text-light);
+    font-size: 14px;
+}
+
+.identify-message i {
+    color: var(--gold);
+    font-size: 32px;
+    display: block;
+    margin-bottom: 10px;
+}
+
+@media (max-width: 768px) {
+    .contact-info {
+        padding-right: 0;
+    }
+    .contact-info h2 {
+        font-size: 28px;
+    }
+    .chat-container {
+        height: 450px;
+    }
+    .user-identify-form .form-row {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 480px) {
+    .chat-container {
+        height: 400px;
+        border-radius: 16px;
+    }
+    .messages-area {
+        padding: 15px;
+    }
+    .chat-input-area {
+        padding: 12px 16px;
+    }
+    .message-bubble {
+        max-width: 90%;
+        font-size: 13px;
+    }
+}
+</style>
+
+<div class="contact-page">
+    <div class="contact-grid">
+        <!-- LEFT: Contact Info -->
+        <div class="contact-info">
+            <h2>დაგვიკავშირდით</h2>
+            <p class="subtitle">
+                მოგვწერეთ ნებისმიერ საკითხზე. ჩვენი გუნდი დაგეხმარებათ
+                რაც შეიძლება სწრაფად.
+            </p>
+
+            <div class="info-cards">
+                <div class="info-card-item">
+                    <div class="info-icon"><i class="fas fa-map-marker-alt"></i></div>
+                    <div class="info-text">
+                        <h4>მისამართი</h4>
+                        <p>თბილისი, საქართველო</p>
+                    </div>
+                </div>
+                <div class="info-card-item">
+                    <div class="info-icon"><i class="fas fa-phone-alt"></i></div>
+                    <div class="info-text">
+                        <h4>ტელეფონი</h4>
+                        <p>+995 555 77 88 27</p>
+                    </div>
+                </div>
+                <div class="info-card-item">
+                    <div class="info-icon"><i class="fas fa-envelope"></i></div>
+                    <div class="info-text">
+                        <h4>ელ. ფოსტა</h4>
+                        <p>info.sheikh.ge@gmail.com</p>
+                    </div>
+                </div>
+                <div class="info-card-item">
+                    <div class="info-icon"><i class="fas fa-clock"></i></div>
+                    <div class="info-text">
+                        <h4>სამუშაო საათები</h4>
+                        <p>24/7</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- RIGHT: Chat -->
+        <div class="chat-container">
+            <!-- Header -->
+            <div class="chat-header">
+                <div class="chat-header-left">
+                    <div class="status-dot"></div>
+                    <div>
+                        <h3>მხარდაჭერა</h3>
+                        <small>ონლაინ 24/7</small>
+                    </div>
+                </div>
+                <div class="chat-user-info" id="chatUserInfo">
+                    <strong id="userNameDisplay">სტუმარი</strong>
+                    <span id="userStatusDisplay">● ონლაინ</span>
+                </div>
+            </div>
+
+            <!-- Messages -->
+            <div class="messages-area" id="messagesArea">
+                <div class="identify-message" id="identifyMessage">
+                    <i class="fas fa-comment-dots"></i>
+                    <p>გთხოვთ შეავსოთ ქვემოთ მოცემული ფორმა<br>ჩატის დასაწყებად</p>
+                </div>
+                <div id="conversationMessages"></div>
+                <div id="typingIndicator" class="typing-indicator" style="display: none;">
+                    <span class="typing-dot"></span>
+                    <span class="typing-dot"></span>
+                    <span class="typing-dot"></span>
+                    <span style="margin-left: 6px; font-size: 12px; color: #999;">მხარდაჭერა წერს...</span>
+                </div>
+            </div>
+
+            <!-- User Identify Form -->
+            <div class="user-identify-form" id="identifyForm">
+                <div class="form-row">
+                    <input type="text" id="userName" placeholder="სახელი *" required>
+                    <input type="tel" id="userPhone" placeholder="ტელეფონი *" required>
+                </div>
+                <input type="email" id="userEmail" placeholder="ელ. ფოსტა" style="width:100%;padding:10px 14px;border:1px solid #e5e5e5;border-radius:12px;font-size:14px;margin-top:10px;">
+                <button class="btn-start" onclick="startChat()">
+                    <i class="fas fa-comment"></i> ჩატის დაწყება
+                </button>
+            </div>
+
+            <!-- Input Area -->
+            <div class="chat-input-area" id="chatInputArea" style="display: none;">
+                <div id="voiceRecordingIndicator" class="voice-recording-indicator" style="display: none;">
+                    <span class="recording-dot"></span>
+                    <span class="recording-timer" id="recordTimer">0:00</span>
+                    <span style="color:#666;font-size:13px;">ჩაწერა...</span>
+                    <button class="recording-cancel" onclick="cancelVoiceRecording()">✕</button>
+                </div>
+
+                <div id="filePreviewContainer" class="file-preview"></div>
+
+                <div class="chat-input-row">
+                    <textarea id="messageInput" placeholder="ჩაწერეთ შეტყობინება..." rows="1"></textarea>
+                    <div class="chat-tools">
+                        <button class="tool-btn" onclick="document.getElementById('fileInput').click()" title="ფაილის მიმაგრება">
+                            <i class="fas fa-paperclip"></i>
+                        </button>
+                        <button class="tool-btn" id="voiceBtn" onclick="toggleVoiceRecording()" title="ხმოვანი მესიჯი">
+                            <i class="fas fa-microphone"></i>
+                        </button>
+                    </div>
+                    <button class="btn-send" onclick="sendMessage()" id="sendBtn">
+                        <i class="fas fa-paper-plane"></i>
+                    </button>
+                </div>
+                <input type="file" id="fileInput" multiple style="display: none;" onchange="handleFileSelect(event)">
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// ========== STATE ==========
+let userId = null;
+let userName = '';
+let userPhone = '';
+let userEmail = '';
+let isIdentified = false;
+let lastMessageId = 0;
+let pollingInterval = null;
+let isRecording = false;
+let mediaRecorder = null;
+let audioChunks = [];
+let recordTimerInterval = null;
+let recordSeconds = 0;
+let voiceBlob = null;
+let selectedFiles = [];
+let messageIdCache = new Set();
+let isUserPollingActive = false;
+
+// Check if user is already logged in or has session
+document.addEventListener('DOMContentLoaded', function() {
+    {% if current_user.is_authenticated %}
+        userName = '{{ current_user.name }}';
+        userPhone = '{{ current_user.phone }}';
+        userEmail = '{{ current_user.email }}';
+        userId = {{ current_user.id }};
+        isIdentified = true;
+        document.getElementById('userNameDisplay').textContent = userName;
+        document.getElementById('identifyForm').style.display = 'none';
+        document.getElementById('chatInputArea').style.display = 'block';
+        document.getElementById('identifyMessage').style.display = 'none';
+        loadMessages();
+        startUserPolling();
+    {% else %}
+        const savedUser = sessionStorage.getItem('chat_user');
+        if (savedUser) {
+            try {
+                const user = JSON.parse(savedUser);
+                if (user.timestamp && (new Date().getTime() - user.timestamp) < 86400000) {
+                    userName = user.name;
+                    userPhone = user.phone;
+                    userEmail = user.email;
+                    isIdentified = true;
+                    document.getElementById('userNameDisplay').textContent = userName;
+                    document.getElementById('identifyForm').style.display = 'none';
+                    document.getElementById('chatInputArea').style.display = 'block';
+                    document.getElementById('identifyMessage').style.display = 'none';
+                    loadMessages();
+                    startUserPolling();
+                }
+            } catch(e) {}
+        }
+    {% endif %}
+
+    const input = document.getElementById('messageInput');
+    if (input) {
+        input.addEventListener('input', function() {
+            this.style.height = 'auto';
+            this.style.height = Math.min(this.scrollHeight, 100) + 'px';
+        });
+
+        input.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                sendMessage();
+            }
+        });
+    }
+});
+
+// ========== FILE HANDLING ==========
+function handleFileSelect(event) {
+    const files = Array.from(event.target.files);
+    selectedFiles = selectedFiles.concat(files);
+    updateFilePreview();
+    event.target.value = '';
+}
+
+function updateFilePreview() {
+    const container = document.getElementById('filePreviewContainer');
+    container.innerHTML = '';
+    selectedFiles.forEach((file, index) => {
+        const div = document.createElement('div');
+        div.className = 'file-preview-item';
+        const icon = file.type.startsWith('image/') ? 'fa-image' : 'fa-file';
+        div.innerHTML = `
+            <i class="fas ${icon}"></i>
+            <span>${file.name}</span>
+            <button class="remove-file" onclick="removeFile(${index})">×</button>
+        `;
+        container.appendChild(div);
+    });
+}
+
+function removeFile(index) {
+    selectedFiles.splice(index, 1);
+    updateFilePreview();
+}
+
+// ========== START CHAT ==========
+function startChat() {
+    userName = document.getElementById('userName').value.trim();
+    userPhone = document.getElementById('userPhone').value.trim();
+    userEmail = document.getElementById('userEmail').value.trim();
+
+    if (!userName || !userPhone) {
+        alert('გთხოვთ შეავსოთ სახელი და ტელეფონის ნომერი');
+        return;
+    }
+
+    isIdentified = true;
+    document.getElementById('userNameDisplay').textContent = userName;
+    document.getElementById('identifyForm').style.display = 'none';
+    document.getElementById('chatInputArea').style.display = 'block';
+    document.getElementById('identifyMessage').style.display = 'none';
+
+    sessionStorage.setItem('chat_user', JSON.stringify({
+        name: userName,
+        phone: userPhone,
+        email: userEmail,
+        timestamp: new Date().getTime()
+    }));
+
+    loadMessages();
+    startUserPolling();
+}
+
+// ========== LOAD MESSAGES ==========
+async function loadMessages() {
+    try {
+        const response = await fetch('/api/chat/messages');
+        const data = await response.json();
+
+        const container = document.getElementById('conversationMessages');
+        container.innerHTML = '';
+        messageIdCache.clear();
+
+        if (!data.messages || data.messages.length === 0) {
+            container.innerHTML = `
+                <div style="text-align:center;padding:20px;color:#999;">
+                    <p>დაიწყეთ საუბარი. ჩვენი გუნდი დაგეხმარებათ!</p>
+                </div>
+            `;
+            return;
+        }
+
+        data.messages.forEach(msg => {
+            messageIdCache.add(msg.id);
+            const isUser = msg.is_from_user;
+            appendMessage(msg, isUser);
+        });
+
+        scrollToBottom();
+
+        if (data.messages.length > 0) {
+            lastMessageId = data.messages[data.messages.length - 1].id;
+        }
+
+    } catch (error) {
+        console.error('Error loading messages:', error);
+    }
+}
+
+// ========== APPEND MESSAGE ==========
+function appendMessage(msg, isUser) {
+    const container = document.getElementById('conversationMessages');
+
+    if (messageIdCache.has(msg.id)) return;
+    messageIdCache.add(msg.id);
+
+    const bubble = document.createElement('div');
+    bubble.className = `message-bubble ${isUser ? 'user' : 'admin'}`;
+
+    const timeStr = formatDate(msg.created_at);
+    const senderName = isUser ? 'თქვენ' : 'მხარდაჭერა';
+
+    let content = `
+        <span class="msg-sender">${senderName}</span>
+        ${msg.message || ''}
+    `;
+
+    if (msg.is_voice && msg.voice_path) {
+        content += `
+            <div class="voice-msg">
+                <i class="fas fa-microphone-alt"></i>
+                <audio controls src="/static/${msg.voice_path}"></audio>
+                <span style="font-size:11px;opacity:0.7;">${msg.voice_duration || 0}წმ</span>
+            </div>
+        `;
+    }
+
+    if (msg.file_path && msg.file_name) {
+        const isImage = msg.file_name.match(/\.(jpg|jpeg|png|gif|webp)$/i);
+        content += `
+            <div class="file-msg">
+                <i class="fas ${isImage ? 'fa-image' : 'fa-file'}"></i>
+                <a href="/static/${msg.file_path}" target="_blank">${msg.file_name}</a>
+            </div>
+        `;
+    }
+
+    content += `<span class="msg-time">${timeStr}</span>`;
+
+    bubble.innerHTML = content;
+    container.appendChild(bubble);
+}
+
+// ========== SEND MESSAGE ==========
+async function sendMessage() {
+    const input = document.getElementById('messageInput');
+    const message = input.value.trim();
+
+    if (!message && selectedFiles.length === 0 && !voiceBlob) return;
+
+    const sendBtn = document.getElementById('sendBtn');
+    sendBtn.disabled = true;
+    sendBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+
+    try {
+        const formData = new FormData();
+        formData.append('name', userName);
+        formData.append('phone', userPhone);
+        formData.append('email', userEmail);
+        formData.append('message', message);
+
+        selectedFiles.forEach(file => {
+            formData.append('file', file);
+        });
+
+        if (voiceBlob) {
+            const reader = new FileReader();
+            const voiceData = await new Promise((resolve) => {
+                reader.onloadend = () => resolve(reader.result);
+                reader.readAsDataURL(voiceBlob);
+            });
+            formData.append('is_voice', 'true');
+            formData.append('voice_data', voiceData);
+            formData.append('voice_duration', recordSeconds);
+        }
+
+        const response = await fetch('/api/chat/send', {
+            method: 'POST',
+            body: formData
+        });
+
+        const data = await response.json();
+
+        if (data.success) {
+            input.value = '';
+            input.style.height = 'auto';
+            selectedFiles = [];
+            voiceBlob = null;
+            updateFilePreview();
+            document.getElementById('voiceRecordingIndicator').style.display = 'none';
+            document.getElementById('voiceBtn').classList.remove('recording');
+
+            // Reload messages to get the sent message with proper ID
+            setTimeout(() => {
+                loadMessages();
+            }, 300);
+        } else {
+            alert(data.error || 'შეცდომა გაგზავნისას');
+        }
+    } catch (error) {
+        console.error('Error sending message:', error);
+        alert('შეცდომა გაგზავნისას');
+    } finally {
+        sendBtn.disabled = false;
+        sendBtn.innerHTML = '<i class="fas fa-paper-plane"></i>';
+        input.focus();
+    }
+}
+
+// ========== VOICE RECORDING ==========
+async function toggleVoiceRecording() {
+    if (isRecording) {
+        stopRecording();
+    } else {
+        await startRecording();
+    }
+}
+
+async function startRecording() {
+    try {
+        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        mediaRecorder = new MediaRecorder(stream);
+        audioChunks = [];
+
+        mediaRecorder.ondataavailable = (event) => audioChunks.push(event.data);
+
+        mediaRecorder.onstop = () => {
+            voiceBlob = new Blob(audioChunks, { type: 'audio/webm' });
+            document.getElementById('voiceRecordingIndicator').style.display = 'flex';
+            document.getElementById('voiceBtn').classList.remove('recording');
+            stream.getTracks().forEach(t => t.stop());
+        };
+
+        mediaRecorder.start();
+        isRecording = true;
+        document.getElementById('voiceBtn').classList.add('recording');
+        document.getElementById('voiceRecordingIndicator').style.display = 'flex';
+
+        recordSeconds = 0;
+        if (recordTimerInterval) clearInterval(recordTimerInterval);
+        recordTimerInterval = setInterval(() => {
+            recordSeconds++;
+            const mins = Math.floor(recordSeconds / 60);
+            const secs = recordSeconds % 60;
+            document.getElementById('recordTimer').textContent =
+                `${mins}:${secs.toString().padStart(2, '0')}`;
+        }, 1000);
+
+    } catch (err) {
+        console.error('Microphone error:', err);
+        alert('მიკროფონის დაშვება აუცილებელია');
+    }
+}
+
+function stopRecording() {
+    if (mediaRecorder && mediaRecorder.state === 'recording') {
+        mediaRecorder.stop();
+        isRecording = false;
+        if (recordTimerInterval) {
+            clearInterval(recordTimerInterval);
+            recordTimerInterval = null;
+        }
+        document.getElementById('voiceBtn').classList.remove('recording');
+    }
+}
+
+function cancelVoiceRecording() {
+    voiceBlob = null;
+    document.getElementById('voiceRecordingIndicator').style.display = 'none';
+    if (isRecording) {
+        stopRecording();
+    }
+    isRecording = false;
+    document.getElementById('voiceBtn').classList.remove('recording');
+}
+
+// ========== USER POLLING - ახალი მესიჯების შემოწმება ==========
+function startUserPolling() {
+    if (isUserPollingActive) return;
+    isUserPollingActive = true;
+
+    if (pollingInterval) {
+        clearInterval(pollingInterval);
+    }
+
+    let lastId = lastMessageId;
+
+    pollingInterval = setInterval(async () => {
+        if (!isIdentified) return;
+
+        try {
+            // ადმინის მესიჯების შემოწმება (is_from_user == false)
+            const response = await fetch(`/api/chat/check-new?user_id=${userId || ''}&last_id=${lastId}`);
+            const data = await response.json();
+
+            if (data.messages && data.messages.length > 0) {
+                const newMessages = data.messages.filter(msg => !messageIdCache.has(msg.id));
+
+                if (newMessages.length > 0) {
+                    newMessages.forEach(msg => {
+                        appendMessage(msg, false);  // false = admin message
+                    });
+
+                    const lastMsg = newMessages[newMessages.length - 1];
+                    if (lastMsg) {
+                        lastId = lastMsg.id;
+                        lastMessageId = lastId;
+                    }
+
+                    scrollToBottom();
+                }
+            }
+        } catch (error) {
+            console.error('User polling error:', error);
+        }
+    }, 3000);  // 3 წამში ერთხელ
+}
+
+// ========== UTILITIES ==========
+function formatDate(isoString) {
+    if (!isoString) return '';
+    try {
+        const date = new Date(isoString);
+        const now = new Date();
+        const isToday = date.toDateString() === now.toDateString();
+
+        if (isToday) {
+            return date.toLocaleTimeString('ka-GE', { hour: '2-digit', minute: '2-digit' });
+        } else {
+            return date.toLocaleDateString('ka-GE', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' });
+        }
+    } catch (e) {
+        return '';
+    }
+}
+
+function scrollToBottom() {
+    const area = document.getElementById('messagesArea');
+    if (area) {
+        setTimeout(() => {
+            area.scrollTop = area.scrollHeight;
+        }, 50);
+    }
+}
+
+// Cleanup
+window.addEventListener('beforeunload', function() {
+    if (pollingInterval) {
+        clearInterval(pollingInterval);
+        isUserPollingActive = false;
+    }
+    if (isRecording) {
+        stopRecording();
+    }
+});
+</script>
+{% endblock %}
