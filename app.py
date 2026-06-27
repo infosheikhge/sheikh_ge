@@ -1281,7 +1281,24 @@ if __name__ == '__main__':
         db.create_all()
         print("✅ Database tables created successfully!")
 
-        # Create admin user if not exists
+       # ============================================================================
+# Run App
+# ============================================================================
+
+# ============================================================================
+# Run App
+# ============================================================================
+
+# ✅ Create tables on app startup (BEFORE running the app)
+with app.app_context():
+    try:
+        db.create_all()
+        print("✅ Database tables created successfully!")
+    except Exception as e:
+        print(f"❌ Error creating tables: {e}")
+
+    # Create admin user if not exists
+    try:
         admin = User.query.filter_by(email='sheikh@gmail.com').first()
         if not admin:
             admin = User(
@@ -1296,8 +1313,11 @@ if __name__ == '__main__':
             print("✅ Admin user created: sheikh@gmail.com / sheikh111")
         else:
             print("✅ Admin user already exists!")
+    except Exception as e:
+        print(f"❌ Error creating admin: {e}")
 
-        # Create test categories if none exist
+    # Create test categories if none exist
+    try:
         if Category.query.count() == 0:
             categories = [
                 Category(name='საათები', description='ლაქშერი საათების კოლექცია'),
@@ -1309,8 +1329,11 @@ if __name__ == '__main__':
                 db.session.add(cat)
             db.session.commit()
             print("✅ Test categories created!")
+    except Exception as e:
+        print(f"❌ Error creating categories: {e}")
 
-        # Create test product if none exist
+    # Create test product if none exist
+    try:
         if Product.query.count() == 0:
             test_product = Product(
                 name='Luxury Gold Watch',
@@ -1322,6 +1345,10 @@ if __name__ == '__main__':
             db.session.add(test_product)
             db.session.commit()
             print("✅ Test product created!")
+    except Exception as e:
+        print(f"❌ Error creating product: {e}")
 
+if __name__ == '__main__':
+    print("🚀 Server starting...")
     port = int(os.environ.get('PORT', 5000))
     app.run(host='0.0.0.0', port=port, debug=False)
