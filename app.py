@@ -1276,9 +1276,12 @@ def order_confirmation(order_id):
 
 if __name__ == '__main__':
     with app.app_context():
+        # Force create tables
+        print("🔄 Creating database tables...")
         db.create_all()
         print("✅ Database tables created successfully!")
 
+        # Create admin user if not exists
         admin = User.query.filter_by(email='sheikh@gmail.com').first()
         if not admin:
             admin = User(
@@ -1292,8 +1295,9 @@ if __name__ == '__main__':
             db.session.commit()
             print("✅ Admin user created: sheikh@gmail.com / sheikh111")
         else:
-            print("✅ Admin user already exists")
+            print("✅ Admin user already exists!")
 
+        # Create test categories if none exist
         if Category.query.count() == 0:
             categories = [
                 Category(name='საათები', description='ლაქშერი საათების კოლექცია'),
@@ -1306,6 +1310,7 @@ if __name__ == '__main__':
             db.session.commit()
             print("✅ Test categories created!")
 
+        # Create test product if none exist
         if Product.query.count() == 0:
             test_product = Product(
                 name='Luxury Gold Watch',
@@ -1317,13 +1322,6 @@ if __name__ == '__main__':
             db.session.add(test_product)
             db.session.commit()
             print("✅ Test product created!")
-
-    print("\n" + "=" * 50)
-    print("🚀 Server running at: http://127.0.0.1:5000")
-    print("📧 Message system is active!")
-    print("🎤 Voice recording feature available!")
-    print("👑 Admin login: sheikh@gmail.com / sheikh111")
-    print("=" * 50 + "\n")
 
     port = int(os.environ.get('PORT', 5000))
     app.run(host='0.0.0.0', port=port, debug=False)
