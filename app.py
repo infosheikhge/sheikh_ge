@@ -1,5 +1,7 @@
 import os
 import sys
+import cloudinary
+import cloudinary.uploader
 from flask import Flask, render_template, request, redirect, url_for, flash, jsonify, session
 from flask_login import LoginManager, login_user, login_required, logout_user, current_user
 from werkzeug.security import generate_password_hash, check_password_hash
@@ -42,7 +44,19 @@ def allowed_image(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in {'png', 'jpg', 'jpeg', 'gif', 'webp'}
 
 
-# Ensure upload folders exist
+# ============================================================================
+# CLOUDINARY CONFIGURATION (მნიშვნელოვანია app-ის შექმნის შემდეგ!)
+# ============================================================================
+
+cloudinary.config(
+    cloud_name=os.environ.get("CLOUDINARY_CLOUD_NAME"),
+    api_key=os.environ.get("CLOUDINARY_API_KEY"),
+    api_secret=os.environ.get("CLOUDINARY_API_SECRET"),
+    secure=True
+)
+
+
+# Ensure upload folders exist (for local development)
 os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
 os.makedirs(os.path.join(app.config['UPLOAD_FOLDER'], 'products'), exist_ok=True)
 os.makedirs(os.path.join(app.config['UPLOAD_FOLDER'], 'messages'), exist_ok=True)
@@ -163,7 +177,31 @@ def contact_page():
 
 
 # ============================================================================
-# Product Image Management Routes
+# Cloudinary Upload Helper Functions
+# ============================================================================
+
+def upload_to_cloudinary(file, folder='products'):
+    """ატვირთავს ფაილს Cloudinary-ზე და აბრუნებს URL-ს"""
+    try:
+        result = cloudinary.uploader.upload(file, folder=f'sheikh_ge/{folder}')
+        return result['secure_url']
+    except Exception as e:
+        print(f"❌ Cloudinary upload error: {e}")
+        return None
+
+
+def delete_from_cloudinary(public_id):
+    """შლის ფაილს Cloudinary-დან"""
+    try:
+        result = cloudinary.uploader.destroy(public_id)
+        return result.get('result') == 'ok'
+    except Exception as e:
+        print(f"❌ Cloudinary delete error: {e}")
+        return False
+
+
+# ============================================================================
+# Product Image Management Routes (UPDATED - Cloudinary)
 # ============================================================================
 
 @app.route('/admin/products/<int:product_id>/images')
@@ -183,18 +221,30 @@ def add_product_image(product_id):
 
     for idx, file in enumerate(files):
         if file and file.filename and allowed_image(file.filename):
-            filename = secure_filename(file.filename)
-            timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
-            unique_filename = f"product_{product_id}_{timestamp}_{idx}_{filename}"
-            file_path = os.path.join(app.config['UPLOAD_FOLDER'], 'products', unique_filename)
-            file.save(file_path)
-
-            image = ProductImage(
-                product_id=product_id,
-                image_path=f'uploads/products/{unique_filename}',
-                display_order=max_order + idx + 1
-            )
-            db.session.add(image)
+            # Upload to Cloudinary
+            cloudinary_url = upload_to_cloudinary(file, f'products/product_{product_id}')
+            
+            if cloudinary_url:
+                image = ProductImage(
+                    product_id=product_id,
+                    image_path=cloudinary_url,  # Cloudinary URL
+                    display_order=max_order + idx + 1
+                )
+                db.session.add(image)
+            else:
+                # Fallback to local upload
+                filename = secure_filename(file.filename)
+                timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+                unique_filename = f"product_{product_id}_{timestamp}_{idx}_{filename}"
+                file_path = os.path.join(app.config['UPLOAD_FOLDER'], 'products', unique_filename)
+                file.save(file_path)
+                
+                image = ProductImage(
+                    product_id=product_id,
+                    image_path=f'uploads/products/{unique_filename}',
+                    display_order=max_order + idx + 1
+                )
+                db.session.add(image)
 
     db.session.commit()
     flash(f'{len(files)} სურათი წარმატებით დაემატა!', 'success')
@@ -206,11 +256,31 @@ def add_product_image(product_id):
 def delete_product_image(image_id):
     image = ProductImage.query.get_or_404(image_id)
     product_id = image.product_id
-    file_path = os.path.join(app.config['UPLOAD_FOLDER'], 'products', os.path.basename(image.image_path))
-    if os.path.exists(file_path):
-        os.remove(file_path)
+    
+    # Check if it's a Cloudinary URL
+    if 'cloudinary.com' in image.image_path:
+        # Extract public_id from URL
+        # Example: https://res.cloudinary.com/cloud_name/image/upload/v1234567/folder/filename.jpg
+        try:
+            public_id = image.image_path.split('/')[-1].split('.')[0]
+            # Remove version and folder
+            parts = image.image_path.split('/')
+            for i, part in enumerate(parts):
+                if part == 'upload':
+                    public_id = '/'.join(parts[i+1:]).split('.')[0]
+                    break
+            delete_from_cloudinary(public_id)
+        except Exception as e:
+            print(f"Error deleting from Cloudinary: {e}")
+    else:
+        # Delete local file
+        file_path = os.path.join(app.config['UPLOAD_FOLDER'], 'products', os.path.basename(image.image_path))
+        if os.path.exists(file_path):
+            os.remove(file_path)
+    
     db.session.delete(image)
     db.session.commit()
+    
     flash('სურათი წარმატებით წაიშალა!', 'success')
     return redirect(url_for('manage_product_images', product_id=product_id))
 
@@ -220,9 +290,11 @@ def delete_product_image(image_id):
 def set_main_image(image_id):
     image = ProductImage.query.get_or_404(image_id)
     product = image.product
+    
     old_main = product.image
     product.image = image.image_path
     image.image_path = old_main
+    
     db.session.commit()
     flash('მთავარი ფოტო წარმატებით შეიცვალა!', 'success')
     return redirect(url_for('manage_product_images', product_id=product.id))
@@ -769,6 +841,10 @@ def delete_order(order_id):
     return redirect(url_for('admin_orders'))
 
 
+# ============================================================================
+# PRODUCT ROUTES WITH CLOUDINARY (UPDATED)
+# ============================================================================
+
 @app.route('/admin/products')
 @admin_required
 def admin_products():
@@ -787,11 +863,17 @@ def add_product():
 
     image = request.files.get('image')
     if image and image.filename and allowed_image(image.filename):
-        filename = secure_filename(image.filename)
-        timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
-        unique_filename = f"{timestamp}_{filename}"
-        image.save(os.path.join(app.config['UPLOAD_FOLDER'], 'products', unique_filename))
-        image_path = f'uploads/products/{unique_filename}'
+        # Upload to Cloudinary
+        cloudinary_url = upload_to_cloudinary(image, 'products/main')
+        if cloudinary_url:
+            image_path = cloudinary_url
+        else:
+            # Fallback to local
+            filename = secure_filename(image.filename)
+            timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+            unique_filename = f"{timestamp}_{filename}"
+            image.save(os.path.join(app.config['UPLOAD_FOLDER'], 'products', unique_filename))
+            image_path = f'uploads/products/{unique_filename}'
     else:
         image_path = 'uploads/default.jpg'
 
@@ -805,21 +887,31 @@ def add_product():
     db.session.add(product)
     db.session.commit()
 
+    # Handle additional images
     additional_images = request.files.getlist('additional_images')
     for idx, img in enumerate(additional_images):
         if img and img.filename and allowed_image(img.filename):
-            filename = secure_filename(img.filename)
-            timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
-            unique_filename = f"product_{product.id}_{timestamp}_{idx}_{filename}"
-            img_path = os.path.join(app.config['UPLOAD_FOLDER'], 'products', unique_filename)
-            img.save(img_path)
-
-            product_image = ProductImage(
-                product_id=product.id,
-                image_path=f'uploads/products/{unique_filename}',
-                display_order=idx
-            )
-            db.session.add(product_image)
+            cloudinary_url = upload_to_cloudinary(img, f'products/product_{product.id}')
+            if cloudinary_url:
+                product_image = ProductImage(
+                    product_id=product.id,
+                    image_path=cloudinary_url,
+                    display_order=idx
+                )
+                db.session.add(product_image)
+            else:
+                # Fallback to local
+                filename = secure_filename(img.filename)
+                timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+                unique_filename = f"product_{product.id}_{timestamp}_{idx}_{filename}"
+                img_path = os.path.join(app.config['UPLOAD_FOLDER'], 'products', unique_filename)
+                img.save(img_path)
+                product_image = ProductImage(
+                    product_id=product.id,
+                    image_path=f'uploads/products/{unique_filename}',
+                    display_order=idx
+                )
+                db.session.add(product_image)
 
     db.session.commit()
     flash('Product added successfully', 'success')
@@ -839,16 +931,29 @@ def edit_product(product_id):
 
         image = request.files.get('image')
         if image and image.filename and allowed_image(image.filename):
-            if product.image and product.image != 'uploads/default.jpg':
+            # Delete old image if it's on Cloudinary
+            if product.image and 'cloudinary.com' in product.image:
+                try:
+                    public_id = product.image.split('/')[-1].split('.')[0]
+                    delete_from_cloudinary(public_id)
+                except:
+                    pass
+            elif product.image and product.image != 'uploads/default.jpg':
                 old_path = os.path.join(app.config['UPLOAD_FOLDER'], 'products', os.path.basename(product.image))
                 if os.path.exists(old_path):
                     os.remove(old_path)
 
-            filename = secure_filename(image.filename)
-            timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
-            unique_filename = f"{timestamp}_{filename}"
-            image.save(os.path.join(app.config['UPLOAD_FOLDER'], 'products', unique_filename))
-            product.image = f'uploads/products/{unique_filename}'
+            # Upload new image to Cloudinary
+            cloudinary_url = upload_to_cloudinary(image, 'products/main')
+            if cloudinary_url:
+                product.image = cloudinary_url
+            else:
+                # Fallback to local
+                filename = secure_filename(image.filename)
+                timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+                unique_filename = f"{timestamp}_{filename}"
+                image.save(os.path.join(app.config['UPLOAD_FOLDER'], 'products', unique_filename))
+                product.image = f'uploads/products/{unique_filename}'
 
         db.session.commit()
         flash('Product updated successfully', 'success')
@@ -865,21 +970,40 @@ def edit_product(product_id):
 def delete_product(product_id):
     product = Product.query.get_or_404(product_id)
 
-    if product.image and product.image != 'uploads/default.jpg':
+    # Delete main image from Cloudinary if exists
+    if product.image and 'cloudinary.com' in product.image:
+        try:
+            public_id = product.image.split('/')[-1].split('.')[0]
+            delete_from_cloudinary(public_id)
+        except:
+            pass
+    elif product.image and product.image != 'uploads/default.jpg':
         main_path = os.path.join(app.config['UPLOAD_FOLDER'], 'products', os.path.basename(product.image))
         if os.path.exists(main_path):
             os.remove(main_path)
 
+    # Delete additional images
     for img in product.additional_images:
-        img_path = os.path.join(app.config['UPLOAD_FOLDER'], 'products', os.path.basename(img.image_path))
-        if os.path.exists(img_path):
-            os.remove(img_path)
+        if img.image_path and 'cloudinary.com' in img.image_path:
+            try:
+                public_id = img.image_path.split('/')[-1].split('.')[0]
+                delete_from_cloudinary(public_id)
+            except:
+                pass
+        else:
+            img_path = os.path.join(app.config['UPLOAD_FOLDER'], 'products', os.path.basename(img.image_path))
+            if os.path.exists(img_path):
+                os.remove(img_path)
 
     db.session.delete(product)
     db.session.commit()
     flash('Product deleted successfully', 'success')
     return redirect(url_for('admin_products'))
 
+
+# ============================================================================
+# Admin Categories Routes
+# ============================================================================
 
 @app.route('/admin/categories')
 @admin_required
@@ -1269,21 +1393,6 @@ def order_confirmation(order_id):
         return redirect(url_for('index'))
     return render_template('order_confirmation.html', order=order)
 
-
-# ============================================================================
-# Run App
-# ============================================================================
-
-if __name__ == '__main__':
-    with app.app_context():
-        # Force create tables
-        print("🔄 Creating database tables...")
-        db.create_all()
-        print("✅ Database tables created successfully!")
-
-       # ============================================================================
-# Run App
-# ============================================================================
 
 # ============================================================================
 # Run App
