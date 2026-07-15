@@ -182,20 +182,22 @@ def contact_page():
 
 def upload_to_cloudinary(file, folder='products'):
     try:
-       result = cloudinary.uploader.upload(
-    file,
-    folder=f"sheikh_ge/{folder}"
-)
+        result = cloudinary.uploader.upload(
+            file,
+            folder=f"sheikh_ge/{folder}",
+            upload_preset="sheikh_ge"
+        )
 
-        print("SUCCESS:", result)
+        print("✅ CLOUDINARY SUCCESS")
+        print(result["secure_url"])
 
         return result["secure_url"]
 
     except Exception as e:
         import traceback
         traceback.print_exc()
-        print("ERROR:", e)
-        return None
+        print("❌ CLOUDINARY ERROR:", e)
+        raise e
 
 
 def delete_from_cloudinary(public_id):
