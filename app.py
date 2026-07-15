@@ -181,16 +181,20 @@ def contact_page():
 # ============================================================================
 
 def upload_to_cloudinary(file, folder='products'):
-    """ატვირთავს ფაილს Cloudinary-ზე და აბრუნებს URL-ს"""
     try:
         result = cloudinary.uploader.upload(
             file,
-            folder=f'sheikh_ge/{folder}',
-            upload_preset=os.environ.get("CLOUDINARY_UPLOAD_PRESET", "sheikh_ge")
+            folder=f"sheikh_ge/{folder}"
         )
-        return result['secure_url']
+
+        print("SUCCESS:", result)
+
+        return result["secure_url"]
+
     except Exception as e:
-        print(f"❌ Cloudinary upload error: {e}")
+        import traceback
+        traceback.print_exc()
+        print("ERROR:", e)
         return None
 
 
