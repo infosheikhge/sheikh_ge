@@ -182,10 +182,10 @@ def contact_page():
 
 def upload_to_cloudinary(file, folder='products'):
     try:
-        result = cloudinary.uploader.upload(
-            file,
-            folder=f"sheikh_ge/{folder}"
-        )
+       result = cloudinary.uploader.upload(
+    file,
+    folder=f"sheikh_ge/{folder}"
+)
 
         print("SUCCESS:", result)
 
