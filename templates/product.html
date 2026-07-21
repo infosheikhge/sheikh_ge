@@ -296,9 +296,9 @@
     margin-bottom: 15px;
 }
 
-/* Tabs Section */
+/* Tabs Section - ახლა ინფორმაციის ნაწილია */
 .tabs-luxury {
-    margin: 60px 0;
+    margin-top: 30px;
 }
 
 .tabs-header-luxury {
@@ -555,32 +555,35 @@
     <!-- Product Main Section -->
     <div class="product-luxury-grid">
 
-        <!-- Gallery Section -->
+        <!-- Gallery Section (მარცხნივ) -->
         <div class="gallery-luxury">
             <div class="main-image-luxury" onclick="toggleZoom(this)">
-<img src="{% if product.image %}{{ product.image }}{% else %}https://via.placeholder.com/800x800?text=No+Image{% endif %}"                     alt="{{ product.name }}"
-                     id="mainImage">
+                <img src="{% if product.image and product.image.startswith('http') %}{{ product.image }}{% elif product.image %}{{ url_for('static', filename=product.image) }}{% else %}https://via.placeholder.com/800x800?text=No+Image{% endif %}" 
+                     alt="{{ product.name }}"
+                     id="mainImage"
+                     onerror="this.src='https://via.placeholder.com/800x800?text=No+Image'">
                 <div class="zoom-icon">
                     <i class="fas fa-search-plus"></i>
                 </div>
             </div>
 
-          <div class="thumbnails-luxury">
-    <div class="thumbnail-luxury active" onclick="changeImage(this, '{% if product.image and product.image.startswith('http') %}{{ product.image }}{% elif product.image %}{{ url_for('static', filename=product.image) }}{% else %}https://via.placeholder.com/800x800?text=No+Image{% endif %}')">
-        <img src="{% if product.image and product.image.startswith('http') %}{{ product.image }}{% elif product.image %}{{ url_for('static', filename=product.image) }}{% else %}https://via.placeholder.com/200x200?text=No+Image{% endif %}" 
-             alt="მთავარი ფოტო"
-             onerror="this.src='https://via.placeholder.com/200x200?text=No+Image'">
-    </div>
-    {% for image in additional_images %}
-    <div class="thumbnail-luxury" onclick="changeImage(this, '{{ image.image_path if image.image_path and image.image_path.startswith('http') else url_for('static', filename=image.image_path) if image.image_path else '' }}')">
-        <img src="{{ image.image_path if image.image_path and image.image_path.startswith('http') else url_for('static', filename=image.image_path) if image.image_path else 'https://via.placeholder.com/200x200?text=No+Image' }}" 
-             alt="{{ image.caption or product.name }}"
-             onerror="this.src='https://via.placeholder.com/200x200?text=No+Image'">
-    </div>
-    {% endfor %}
-</div>
+            <div class="thumbnails-luxury">
+                <div class="thumbnail-luxury active" onclick="changeImage(this, '{% if product.image and product.image.startswith('http') %}{{ product.image }}{% elif product.image %}{{ url_for('static', filename=product.image) }}{% else %}https://via.placeholder.com/800x800?text=No+Image{% endif %}')">
+                    <img src="{% if product.image and product.image.startswith('http') %}{{ product.image }}{% elif product.image %}{{ url_for('static', filename=product.image) }}{% else %}https://via.placeholder.com/200x200?text=No+Image{% endif %}" 
+                         alt="მთავარი ფოტო"
+                         onerror="this.src='https://via.placeholder.com/200x200?text=No+Image'">
+                </div>
+                {% for image in additional_images %}
+                <div class="thumbnail-luxury" onclick="changeImage(this, '{{ image.image_path if image.image_path and image.image_path.startswith('http') else url_for('static', filename=image.image_path) if image.image_path else '' }}')">
+                    <img src="{{ image.image_path if image.image_path and image.image_path.startswith('http') else url_for('static', filename=image.image_path) if image.image_path else 'https://via.placeholder.com/200x200?text=No+Image' }}" 
+                         alt="{{ image.caption or product.name }}"
+                         onerror="this.src='https://via.placeholder.com/200x200?text=No+Image'">
+                </div>
+                {% endfor %}
+            </div>
+        </div>
 
-        <!-- Product Info Section -->
+        <!-- Product Info Section (მარჯვნივ) -->
         <div class="product-info-luxury">
             {% if product.is_new %}
             <div class="product-badge-luxury">
@@ -600,10 +603,6 @@
             {% if product.short_description %}
             <div class="short-desc-luxury">
                 <p>{{ product.short_description }}</p>
-            </div>
-            {% elif product.description %}
-            <div class="short-desc-luxury">
-                <p>{{ product.description|truncate(150) }}</p>
             </div>
             {% endif %}
 
@@ -657,77 +656,81 @@
                     <span>პრემიუმ ხარისხი</span>
                 </div>
             </div>
-        </div>
-    </div>
 
-    <!-- Tabs Section -->
-    <div class="tabs-luxury">
-        <div class="tabs-header-luxury">
-            <button class="tab-btn-luxury active" onclick="switchTab('description')">აღწერა</button>
-            <button class="tab-btn-luxury" onclick="switchTab('details')">დეტალები</button>
-            <button class="tab-btn-luxury" onclick="switchTab('shipping')">მიწოდება და დაბრუნება</button>
-        </div>
+            <!-- TABS - აქ არის ინფორმაციის ქვეშ, იმავე სვეტში -->
+            <div class="tabs-luxury">
+                <div class="tabs-header-luxury">
+                    <button class="tab-btn-luxury active" onclick="switchTab('description')">აღწერა</button>
+                    <button class="tab-btn-luxury" onclick="switchTab('details')">დეტალები</button>
+                    <button class="tab-btn-luxury" onclick="switchTab('shipping')">მიწოდება და დაბრუნება</button>
+                </div>
 
-        <!-- Description Tab -->
-        <div id="tab-description" class="tab-content-luxury active">
-            <h3>პროდუქტის აღწერა</h3>
-            <div style="color: var(--text); line-height: 1.8;">
-                {% if product.full_description %}
-                    {{ product.full_description|safe }}
-                {% elif product.description %}
-                    <p>{{ product.description }}</p>
-                {% else %}
-                    <p>პროდუქტის დეტალური აღწერა მალე დაემატება.</p>
-                {% endif %}
+                <!-- Description Tab -->
+                <div id="tab-description" class="tab-content-luxury active">
+                    <h3>პროდუქტის აღწერა</h3>
+                    <div style="color: var(--text); line-height: 1.8;">
+                        {% if product.full_description %}
+                            {{ product.full_description|safe }}
+                        {% elif product.description %}
+                            <p>{{ product.description }}</p>
+                        {% else %}
+                            <p>პროდუქტის დეტალური აღწერა მალე დაემატება.</p>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- Details Tab -->
+                <div id="tab-details" class="tab-content-luxury">
+                    <h3>პროდუქტის მახასიათებლები</h3>
+                    <table class="spec-table">
+                        {% if product.category %}
+                        <tr>
+                            <td>კატეგორია</td>
+                            <td>{{ product.category.name }}</td>
+                        </tr>
+                        {% endif %}
+                        <tr>
+                            <td>ხელმისაწვდომობა</td>
+                            <td><span style="color: #4CAF50;"><i class="fas fa-check-circle"></i> მარაგშია</span></td>
+                        </tr>
+                        <tr>
+                            <td>მდგომარეობა</td>
+                            <td>100% ორიგინალი</td>
+                        </tr>
+                        {% if product.created_at %}
+                        <tr>
+                            <td>დამატების თარიღი</td>
+                            <td>{{ product.created_at.strftime('%d.%m.%Y') }}</td>
+                        </tr>
+                        {% endif %}
+                        <tr>
+                            <td>ხარისხი</td>
+                            <td>პრემიუმ</td>
+                        </tr>
+                        <tr>
+                            <td>გარანტია</td>
+                            <td>2 წელი</td>
+                        </tr>
+                    </table>
+                </div>
+
+                <!-- Shipping Tab -->
+                <div id="tab-shipping" class="tab-content-luxury">
+                    <h3>მიწოდების და დაბრუნების პოლიტიკა</h3>
+                    <div style="color: var(--text); line-height: 1.8;">
+                        <p><strong><i class="fas fa-truck" style="color: var(--gold); margin-right: 8px;"></i> უფასო მიწოდება</strong> - უფასო მიწოდება საქართველოს მასშტაბით.</p>
+                        <p style="margin-top: 15px;"><strong><i class="fas fa-clock" style="color: var(--gold); margin-right: 8px;"></i> მიწოდების დრო</strong> - 2-4 სამუშაო დღე თბილისში, 3-7 სამუშაო დღე რეგიონებში.</p>
+                        <p style="margin-top: 15px;"><strong><i class="fas fa-undo-alt" style="color: var(--gold); margin-right: 8px;"></i> დაბრუნების პოლიტიკა</strong> - 14 დღის განმავლობაში შეგიძლიათ დააბრუნოთ პროდუქტი, თუ ის არის მოუხმარი და ორიგინალურ შეფუთვაში.</p>
+                        <p style="margin-top: 15px;"><strong><i class="fas fa-headset" style="color: var(--gold); margin-right: 8px;"></i> მხარდაჭერა</strong> - 24/7 მხარდაჭერა ტელეფონით ან ელ-ფოსტით.</p>
+                    </div>
+                </div>
             </div>
-        </div>
+            <!-- END TABS -->
 
-        <!-- Details Tab -->
-        <div id="tab-details" class="tab-content-luxury">
-            <h3>პროდუქტის მახასიათებლები</h3>
-            <table class="spec-table">
-                {% if product.category %}
-                <tr>
-                    <td>კატეგორია</td>
-                    <td>{{ product.category.name }}</td>
-                </tr>
-                {% endif %}
-                <tr>
-                    <td>ხელმისაწვდომობა</td>
-                    <td><span style="color: #4CAF50;"><i class="fas fa-check-circle"></i> მარაგშია</span></td>
-                </tr>
-                <tr>
-                    <td>მდგომარეობა</td>
-                    <td>100% ორიგინალი</td>
-                </tr>
-                {% if product.created_at %}
-                <tr>
-                    <td>დამატების თარიღი</td>
-                    <td>{{ product.created_at.strftime('%d.%m.%Y') }}</td>
-                </tr>
-                {% endif %}
-                <tr>
-                    <td>ხარისხი</td>
-                    <td>პრემიუმ</td>
-                </tr>
-                <tr>
-                    <td>გარანტია</td>
-                    <td>2 წელი</td>
-                </tr>
-            </table>
         </div>
-
-        <!-- Shipping Tab -->
-        <div id="tab-shipping" class="tab-content-luxury">
-            <h3>მიწოდების და დაბრუნების პოლიტიკა</h3>
-            <div style="color: var(--text); line-height: 1.8;">
-                <p><strong><i class="fas fa-truck" style="color: var(--gold); margin-right: 8px;"></i> უფასო მიწოდება</strong> - უფასო მიწოდება საქართველოს მასშტაბით.</p>
-                <p style="margin-top: 15px;"><strong><i class="fas fa-clock" style="color: var(--gold); margin-right: 8px;"></i> მიწოდების დრო</strong> - 2-4 სამუშაო დღე თბილისში, 3-7 სამუშაო დღე რეგიონებში.</p>
-                <p style="margin-top: 15px;"><strong><i class="fas fa-undo-alt" style="color: var(--gold); margin-right: 8px;"></i> დაბრუნების პოლიტიკა</strong> - 14 დღის განმავლობაში შეგიძლიათ დააბრუნოთ პროდუქტი, თუ ის არის მოუხმარი და ორიგინალურ შეფუთვაში.</p>
-                <p style="margin-top: 15px;"><strong><i class="fas fa-headset" style="color: var(--gold); margin-right: 8px;"></i> მხარდაჭერა</strong> - 24/7 მხარდაჭერა ტელეფონით ან ელ-ფოსტით.</p>
-            </div>
-        </div>
+        <!-- END Product Info Section -->
     </div>
+    <!-- END Product Main Section -->
 </div>
 
 <!-- Success Modal -->
