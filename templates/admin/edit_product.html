@@ -78,8 +78,10 @@
             <!-- Current Image -->
             <div class="form-group">
                 <label>Current Image</label>
-               <div class="current-image">
-    <img src="{{ product.image }}" alt="{{ product.name }}">
+              <div class="current-image">
+    <img src="{{ product.image if product.image and product.image.startswith('http') else url_for('static', filename=product.image) if product.image else url_for('static', filename='images/no-image.png') }}" 
+         alt="{{ product.name }}"
+         onerror="this.src='https://via.placeholder.com/200x200?text=No+Image'">
 </div>
             </div>
 
