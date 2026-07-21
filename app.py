@@ -183,10 +183,9 @@ def contact_page():
 def upload_to_cloudinary(file, folder='products'):
     try:
         result = cloudinary.uploader.upload(
-    file,
-    folder=f"sheikh_ge/{folder}",
-    upload_preset="sheikh_ge"
-)
+            file,
+            folder=f"sheikh_ge/{folder}"
+        )
 
         print("✅ CLOUDINARY SUCCESS")
         print(result["secure_url"])
@@ -198,7 +197,6 @@ def upload_to_cloudinary(file, folder='products'):
         traceback.print_exc()
         print("❌ CLOUDINARY ERROR:", e)
         raise e
-
 
 def delete_from_cloudinary(public_id):
     """შლის ფაილს Cloudinary-დან"""
