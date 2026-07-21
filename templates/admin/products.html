@@ -1166,13 +1166,15 @@ body {
                 <tbody id="productsTableBody">
                     {% for product in products %}
                     <tr class="product-row" data-product-name="{{ product.name|lower }}">
-                        <td>
-                            {% if product.image %}
-                            <img class="product-image" src="{{ url_for('static', filename=product.image) }}" alt="{{ product.name }}">
-                            {% else %}
-                            <img class="product-image" src="https://via.placeholder.com/50x50?text=No+Image" alt="No image">
-                            {% endif %}
-                        </td>
+                       <td>
+    {% if product.image %}
+    <img class="product-image" src="{{ product.image if product.image.startswith('http') else url_for('static', filename=product.image) }}" 
+         alt="{{ product.name }}"
+         onerror="this.src='https://via.placeholder.com/50x50?text=No+Image'">
+    {% else %}
+    <img class="product-image" src="https://via.placeholder.com/50x50?text=No+Image" alt="No image">
+    {% endif %}
+</td>
                         <td class="product-name">{{ product.name }}</td>
                         <td>{{ product.category.name if product.category else '—' }}</td>
                         <td class="product-price">₾{{ "%.2f"|format(product.price) }}</td>
