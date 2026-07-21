@@ -558,8 +558,7 @@
         <!-- Gallery Section -->
         <div class="gallery-luxury">
             <div class="main-image-luxury" onclick="toggleZoom(this)">
-                <img src="{% if product.image %}{{ url_for('static', filename=product.image) }}{% else %}https://via.placeholder.com/800x800?text=No+Image{% endif %}"
-                     alt="{{ product.name }}"
+<img src="{% if product.image %}{{ product.image }}{% else %}https://via.placeholder.com/800x800?text=No+Image{% endif %}"                     alt="{{ product.name }}"
                      id="mainImage">
                 <div class="zoom-icon">
                     <i class="fas fa-search-plus"></i>
@@ -568,12 +567,11 @@
 
             <div class="thumbnails-luxury">
                 <div class="thumbnail-luxury active" onclick="changeImage(this, '{% if product.image %}{{ url_for('static', filename=product.image) }}{% else %}https://via.placeholder.com/800x800?text=No+Image{% endif %}')">
-                    <img src="{% if product.image %}{{ url_for('static', filename=product.image) }}{% else %}https://via.placeholder.com/200x200?text=No+Image{% endif %}" alt="მთავარი ფოტო">
-                </div>
+<img src="{% if product.image %}{{ product.image }}{% else %}https://via.placeholder.com/200x200?text=No+Image{% endif %}" alt="მთავარი ფოტო">                </div>
                 {% for image in additional_images %}
-                <div class="thumbnail-luxury" onclick="changeImage(this, '{{ url_for('static', filename=image.image_path) }}')">
-                    <img src="{{ url_for('static', filename=image.image_path) }}" alt="{{ image.caption or product.name }}">
-                </div>
+               <div class="thumbnail-luxury" onclick="changeImage(this, '{{ image.image_path }}')">
+    <img src="{{ image.image_path }}" alt="{{ image.caption or product.name }}">
+</div>
                 {% endfor %}
             </div>
         </div>
