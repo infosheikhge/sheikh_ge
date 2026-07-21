@@ -832,20 +832,12 @@ img, video, iframe {
                         <tr>
                             <td><span style="font-weight: 600;">#{{ order.id }}</span></td>
                             <td>{{ order.name|truncate(20) }}</td>
-                        <td>
-{% if order.items %}
-        <div style="display: flex; align-items: center; gap: 10px;">
-            <img src="{{ order.items[0].product.image if order.items[0].product.image and order.items[0].product.image.startswith('http') else url_for('static', filename=order.items[0].product.image) if order.items[0].product.image else 'https://via.placeholder.com/40x40?text=No+Image' }}" 
-                 alt="{{ order.items[0].product.name }}"
-                 style="width: 40px; height: 40px; object-fit: cover; border-radius: 8px; border: 1px solid rgba(212,175,55,0.2); flex-shrink: 0;"
-                 onerror="this.src='https://via.placeholder.com/40x40?text=No+Image'">
-            <span>
-                {{ order.items[0].product.name|truncate(20) }}
-                {% if order.items|length > 1 %}
-                    <span style="color: var(--text-gray); font-size: 11px; display: block;">+ {{ order.items|length - 1 }} სხვა</span>
-                {% endif %}
-            </span>
-        </div>
+                      <td>
+    {% if order.items %}
+        <img src="{{ order.items[0].product.image }}" 
+             alt="{{ order.items[0].product.name }}"
+             style="width: 40px; height: 40px; object-fit: cover; border-radius: 8px; border: 1px solid rgba(212,175,55,0.2);"
+             onerror="this.src='https://via.placeholder.com/40x40?text=No+Image'">
     {% else %}
         <span style="color: var(--text-gray);">-</span>
     {% endif %}
