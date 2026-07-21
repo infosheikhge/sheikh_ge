@@ -715,8 +715,9 @@
                     <tr>
                         <td data-label="პროდუქტი">
                             <div class="cart-product">
-                                <img class="cart-product-image" src="{{ url_for('static', filename=item.image) if item.image else 'https://via.placeholder.com/80x80?text=No+Image' }}" alt="{{ item.name }}">
-                                <div class="cart-product-info">
+<img class="cart-product-image" 
+     src="{{ item.image if item.image and item.image.startswith('http') else url_for('static', filename=item.image) if item.image else 'https://via.placeholder.com/80x80?text=No+Image' }}" 
+     alt="{{ item.name }}">                                <div class="cart-product-info">
                                     <h3>{{ item.name }}</h3>
                                     {% if item.category %}
                                     <span class="product-category">{{ item.category.name }}</span>
