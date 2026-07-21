@@ -353,8 +353,8 @@
         {% for image in images %}
         <div class="image-card" data-id="{{ image.id }}" data-order="{{ image.display_order }}">
             <div class="image-wrapper">
-                <img src="{{ url_for('static', filename=image.image_path) }}" alt="{{ image.caption or product.name }}">
-                {% if product.image == image.image_path %}
+<img src="{{ image.image_path if image.image_path.startswith('http') else url_for('static', filename=image.image_path) }}" 
+     alt="{{ image.caption or product.name }}">                {% if product.image == image.image_path %}
                 <span class="main-badge">★ მთავარი</span>
                 {% endif %}
                 <span class="image-order">#{{ image.display_order + 1 }}</span>
