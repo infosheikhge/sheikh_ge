@@ -553,8 +553,10 @@
                     <div class="cart-items">
                         {% for product_id, item in session.cart.items() %}
                        <div class="cart-item">
-    <img src="{{ item.image }}" 
-         style="width:50px;height:50px;border-radius:10px;object-fit:cover;">
+<img src="{{ item.image if item.image else url_for('static', filename='images/no-image.png') }}" 
+     style="width:50px;height:50px;border-radius:10px;object-fit:cover;background:#f5f5f5;"
+     alt="{{ item.name }}"
+     onerror="this.src='https://via.placeholder.com/50x50?text=No+Image'">         style="width:50px;height:50px;border-radius:10px;object-fit:cover;">
                             <div class="cart-item-info">
                                 <span class="cart-item-name">{{ item.name }}</span>
                                 <div class="cart-item-meta">
