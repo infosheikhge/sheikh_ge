@@ -788,8 +788,9 @@
                     {% for product in products %}
                     <div class="product-card-grid" data-product-id="{{ product.id }}" data-product-name="{{ product.name|lower }}" data-product-category="{{ product.category.id if product.category else '' }}" data-product-price="{{ product.price }}">
                         <div class="product-image-wrapper">
-                            <img class="product-image-grid" src="{% if product.image %}{{ url_for('static', filename=product.image) }}{% else %}https://via.placeholder.com/400x280?text=Sheikh{% endif %}" alt="{{ product.name }}">
-                            <div class="image-overlay"></div>
+<img class="product-image-grid" 
+src="{{ product.image if product.image else 'https://via.placeholder.com/400x280?text=Sheikh' }}" 
+alt="{{ product.name }}">                            <div class="image-overlay"></div>
                             {% if product.is_new %}<span class="product-badge">✨ NEW</span>{% endif %}
                             {% if product.price > 500 %}<span class="product-badge luxury">👑 LUXURY</span>{% endif %}
                         </div>
