@@ -832,8 +832,8 @@ img, video, iframe {
                         <tr>
                             <td><span style="font-weight: 600;">#{{ order.id }}</span></td>
                             <td>{{ order.name|truncate(20) }}</td>
-                         <td>
-    {% if order.items %}
+                        <td>
+{% if order.items %}
         <div style="display: flex; align-items: center; gap: 10px;">
             <img src="{{ order.items[0].product.image if order.items[0].product.image and order.items[0].product.image.startswith('http') else url_for('static', filename=order.items[0].product.image) if order.items[0].product.image else 'https://via.placeholder.com/40x40?text=No+Image' }}" 
                  alt="{{ order.items[0].product.name }}"
