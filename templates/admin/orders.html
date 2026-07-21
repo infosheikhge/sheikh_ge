@@ -1019,11 +1019,21 @@
                             <div class="products-list">
                                 {% for item in order.items %}
                                 <div class="product-item">
-                                    {% if item.product.image %}
-                                    <img class="product-image-thumb" src="{{ url_for('static', filename=item.product.image) }}" alt="{{ item.product.name }}">
-                                    {% else %}
-                                    <img class="product-image-thumb" src="https://via.placeholder.com/45x45?text=No+Image" alt="No image">
-                                    {% endif %}
+                                  {% if item.product.image %}
+    {% if item.product.image.startswith('http') %}
+        <img class="product-image-thumb" 
+             src="{{ item.product.image }}" 
+             alt="{{ item.product.name }}">
+    {% else %}
+        <img class="product-image-thumb" 
+             src="{{ url_for('static', filename=item.product.image) }}" 
+             alt="{{ item.product.name }}">
+    {% endif %}
+{% else %}
+    <img class="product-image-thumb" 
+         src="https://via.placeholder.com/45x45?text=No+Image" 
+         alt="No image">
+{% endif %}
                                     <div class="product-info">
                                         <span class="product-name">{{ item.product.name }}</span>
                                         <span class="product-quantity">რაოდენობა: x{{ item.quantity }}</span>
