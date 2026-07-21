@@ -565,18 +565,20 @@
                 </div>
             </div>
 
-            <div class="thumbnails-luxury">
-                <div class="thumbnail-luxury active" onclick="changeImage(this, '{% if product.image %}{{ url_for('static', filename=product.image) }}{% else %}https://via.placeholder.com/800x800?text=No+Image{% endif %}')">
-<img src="{% if product.image %}{{ product.image }}{% else %}https://via.placeholder.com/200x200?text=No+Image{% endif %}" alt="მთავარი ფოტო">                </div>
-                {% for image in additional_images %}
-     <div class="thumbnail-luxury" onclick="changeImage(this, '{{ image.image_path if image.image_path and image.image_path.startswith('http') else url_for('static', filename=image.image_path) if image.image_path else '' }}')">
-    <img src="{{ image.image_path if image.image_path and image.image_path.startswith('http') else url_for('static', filename=image.image_path) if image.image_path else 'https://via.placeholder.com/200x200?text=No+Image' }}" 
-         alt="{{ image.caption or product.name }}"
-         onerror="this.src='https://via.placeholder.com/200x200?text=No+Image'">
+          <div class="thumbnails-luxury">
+    <div class="thumbnail-luxury active" onclick="changeImage(this, '{% if product.image and product.image.startswith('http') %}{{ product.image }}{% elif product.image %}{{ url_for('static', filename=product.image) }}{% else %}https://via.placeholder.com/800x800?text=No+Image{% endif %}')">
+        <img src="{% if product.image and product.image.startswith('http') %}{{ product.image }}{% elif product.image %}{{ url_for('static', filename=product.image) }}{% else %}https://via.placeholder.com/200x200?text=No+Image{% endif %}" 
+             alt="მთავარი ფოტო"
+             onerror="this.src='https://via.placeholder.com/200x200?text=No+Image'">
+    </div>
+    {% for image in additional_images %}
+    <div class="thumbnail-luxury" onclick="changeImage(this, '{{ image.image_path if image.image_path and image.image_path.startswith('http') else url_for('static', filename=image.image_path) if image.image_path else '' }}')">
+        <img src="{{ image.image_path if image.image_path and image.image_path.startswith('http') else url_for('static', filename=image.image_path) if image.image_path else 'https://via.placeholder.com/200x200?text=No+Image' }}" 
+             alt="{{ image.caption or product.name }}"
+             onerror="this.src='https://via.placeholder.com/200x200?text=No+Image'">
+    </div>
+    {% endfor %}
 </div>
-                {% endfor %}
-            </div>
-        </div>
 
         <!-- Product Info Section -->
         <div class="product-info-luxury">
