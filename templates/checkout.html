@@ -552,7 +552,9 @@
                 {% if session.cart and session.cart|length > 0 %}
                     <div class="cart-items">
                         {% for product_id, item in session.cart.items() %}
-                        <div class="cart-item">
+                       <div class="cart-item">
+    <img src="{{ item.image }}" 
+         style="width:50px;height:50px;border-radius:10px;object-fit:cover;">
                             <div class="cart-item-info">
                                 <span class="cart-item-name">{{ item.name }}</span>
                                 <div class="cart-item-meta">
