@@ -107,7 +107,15 @@ def format_message_time(dt):
     else:
         return dt.strftime('%d.%m.%Y')
 
+@app.template_filter('image_url')
+def image_url_filter(image):
+    if not image:
+        return url_for('static', filename='uploads/default.jpg')
 
+    if image.startswith('http'):
+        return image
+
+    return url_for('static', filename=image)
 # ============================================================================
 # Main Routes
 # ============================================================================
