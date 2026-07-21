@@ -1553,8 +1553,8 @@ body.intro-active { overflow: hidden; }
         {% for product in products %}
         <div class="product-card">
             <div class="product-image">
-                <img src="{{ url_for('static', filename=product.image) if product.image else 'https://via.placeholder.com/400x270?text=Luxury' }}" alt="{{ product.name }}">
-                <div class="image-overlay"></div>
+<img src="{{ product.image if product.image and product.image.startswith('http') else url_for('static', filename=product.image) if product.image else 'https://via.placeholder.com/400x270?text=Luxury' }}" 
+alt="{{ product.name }}">                <div class="image-overlay"></div>
                 {% if product.is_new %}<span class="badge">NEW</span>{% endif %}
             </div>
             <div class="product-info">
