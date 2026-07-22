@@ -373,6 +373,27 @@ body {
     box-shadow: var(--shadow-sm);
 }
 
+/* ============================================ */
+/* ✅ PRODUCT IMAGE - FIXED SIZE! */
+/* ============================================ */
+.product-image-card {
+    width: 80px;
+    height: 80px;
+    object-fit: cover;
+    border-radius: 12px;
+    border: 1px solid rgba(212,175,55,0.15);
+    flex-shrink: 0;
+}
+
+@media (max-width: 550px) {
+    .product-image-card {
+        width: 60px;
+        height: 60px;
+    }
+}
+
+/* ============================================ */
+
 .product-info-card {
     flex: 2;
     min-width: 150px;
@@ -716,27 +737,27 @@ body {
 
                 <div class="products-list">
                     {% for item in order.items %}
-                  <div class="product-item-card">
+                    <div class="product-item-card">
 
-    <img
-        src="{{ item.product.image }}"
-        alt="{{ item.product.name }}"
-        class="product-image-card">
+                        <img
+                            src="{{ item.product.image }}"
+                            alt="{{ item.product.name }}"
+                            class="product-image-card">
 
-    <div class="product-info-card">
-        <div class="product-name-card">{{ item.product.name }}</div>
+                        <div class="product-info-card">
+                            <div class="product-name-card">{{ item.product.name }}</div>
 
-        <div class="product-details-card">
-            <span><i class="fas fa-cube"></i> რაოდენობა: {{ item.quantity }}</span>
-            <span><i class="fas fa-tag"></i> ფასი: ₾{{ "%.2f"|format(item.price) }}</span>
-        </div>
-    </div>
+                            <div class="product-details-card">
+                                <span><i class="fas fa-cube"></i> რაოდენობა: {{ item.quantity }}</span>
+                                <span><i class="fas fa-tag"></i> ფასი: ₾{{ "%.2f"|format(item.price) }}</span>
+                            </div>
+                        </div>
 
-    <div class="product-total-card">
-        ₾{{ "%.2f"|format(item.price * item.quantity) }}
-    </div>
+                        <div class="product-total-card">
+                            ₾{{ "%.2f"|format(item.price * item.quantity) }}
+                        </div>
 
-</div>
+                    </div>
                     {% endfor %}
                 </div>
 
