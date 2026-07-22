@@ -1121,12 +1121,16 @@ async function sendMessage() {
             formData.append('voice_duration', recordSeconds);
         }
 
+        console.log("🔵 Sending message to user:", currentUserId);
+        console.log("🔵 Message:", message);
+
         const response = await fetch('/admin/api/chat/send', {
             method: 'POST',
             body: formData
         });
 
         const data = await response.json();
+        console.log("📥 Response:", data);
 
         if (data.success) {
             textarea.value = '';
@@ -1135,19 +1139,9 @@ async function sendMessage() {
             document.getElementById('voiceRecordingIndicator').style.display = 'none';
             document.getElementById('voiceBtn').classList.remove('recording');
 
-            // ✅ APPEND MESSAGE IMMEDIATELY
-            if (data.message) {
-                // Create a message object for display
-                const msgData = data.message;
-                // Append as admin (right side)
-                appendMessageToContainer(msgData, true, 'ადმინისტრატორი');
-                lastMessageId = msgData.id;
-                scrollToBottom();
-            } else {
-                // Fallback: reload messages
-                await loadUserMessages(currentUserId);
-            }
-
+            // ✅ RELOAD ALL MESSAGES (გარანტირებული გამოსავალი)
+            await loadUserMessages(currentUserId);
+            
             await loadConversations();
         } else {
             alert(data.error || 'შეცდომა გაგზავნისას');
