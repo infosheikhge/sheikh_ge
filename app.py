@@ -70,7 +70,13 @@ login_manager = LoginManager(app)
 login_manager.login_view = 'login'
 login_manager.login_message = 'Please log in to access this page.'
 
-
+@app.route('/my-purchases')
+@login_required
+def my_purchases():
+    """მომხმარებლის მიერ შეძენილი პროდუქტების გვერდი"""
+    orders = Order.query.filter_by(user_id=current_user.id).order_by(Order.created_at.desc()).all()
+    return render_template('my_purchases.html', orders=orders)
+    
 @login_manager.user_loader
 def load_user(user_id):
     return User.query.get(int(user_id))
