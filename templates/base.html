@@ -193,11 +193,13 @@ body {
     transform: rotate(-45deg) translate(7px, -7px);
 }
 
-/* DESKTOP NAVIGATION */
+/* ============================================ */
+/* DESKTOP NAVIGATION - 5 LINKS + MORE DROPDOWN */
+/* ============================================ */
 .desktop-nav {
     display: flex;
     align-items: center;
-    gap: 30px;
+    gap: 20px;
 }
 
 .nav-link {
@@ -226,6 +228,103 @@ body {
 }
 
 .nav-link:hover { color: var(--gold); }
+
+/* MORE DROPDOWN */
+.dropdown {
+    position: relative;
+    display: inline-block;
+}
+
+.dropdown-btn {
+    background: none;
+    border: none;
+    color: var(--text-secondary);
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    padding: 0;
+    font-family: 'Poppins', sans-serif;
+    transition: var(--transition);
+}
+
+.dropdown-btn:hover {
+    color: var(--gold);
+}
+
+.dropdown-btn i {
+    font-size: 12px;
+    transition: transform 0.3s ease;
+}
+
+.dropdown-btn.active i {
+    transform: rotate(180deg);
+}
+
+.dropdown-content {
+    display: none;
+    position: absolute;
+    top: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    background: white;
+    min-width: 200px;
+    border-radius: 12px;
+    box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+    padding: 8px 0;
+    margin-top: 10px;
+    z-index: 100;
+    border: 1px solid rgba(212,175,55,0.15);
+}
+
+.dropdown-content::before {
+    content: '';
+    position: absolute;
+    top: -6px;
+    left: 50%;
+    transform: translateX(-50%) rotate(45deg);
+    width: 12px;
+    height: 12px;
+    background: white;
+    border-top: 1px solid rgba(212,175,55,0.15);
+    border-left: 1px solid rgba(212,175,55,0.15);
+}
+
+.dropdown-content.show {
+    display: block;
+    animation: fadeInDown 0.2s ease;
+}
+
+.dropdown-content a {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 20px;
+    color: var(--text-secondary);
+    text-decoration: none;
+    font-size: 13px;
+    transition: var(--transition);
+}
+
+.dropdown-content a:hover {
+    background: rgba(197,160,89,0.08);
+    color: var(--gold);
+}
+
+.dropdown-content a i {
+    width: 20px;
+    color: var(--gold);
+    font-size: 14px;
+}
+
+@keyframes fadeInDown {
+    from { opacity: 0; transform: translateX(-50%) translateY(-10px); }
+    to { opacity: 1; transform: translateX(-50%) translateY(0); }
+}
+
+/* ============================================ */
 
 /* ADMIN BADGE - GOLD OVAL */
 .admin-oval {
@@ -751,48 +850,66 @@ main {
         <!-- Logo -->
         <a href="{{ url_for('index') }}" class="logo">Sheikh<span>.ge</span></a>
 
-        <!-- Desktop Navigation -->
+        <!-- Desktop Navigation - 5 MAIN LINKS + MORE DROPDOWN -->
         <div class="desktop-nav">
+            <!-- 1. მთავარი -->
             <a href="{{ url_for('index') }}" class="nav-link">მთავარი</a>
+            <!-- 2. მაღაზია -->
             <a href="{{ url_for('shop') }}" class="nav-link">მაღაზია</a>
+            <!-- 3. ჩვენ შესახებ -->
             <a href="{{ url_for('about') }}" class="nav-link">ჩვენ შესახებ</a>
 
-            <!-- ✅ "ჩემი შეძენილი" - მხოლოდ ავტორიზებული მომხმარებლებისთვის -->
+            <!-- 4. ჩემი შეძენილი (მხოლოდ ავტორიზებულისთვის) -->
             {% if current_user.is_authenticated %}
                 <a href="{{ url_for('my_purchases') }}" class="nav-link">
                     <i class="fas fa-shopping-bag"></i> ჩემი შეძენილი
                 </a>
             {% endif %}
 
-            <!-- კონტაქტი - მხოლოდ არა-ადმინისთვის -->
+            <!-- 5. კონტაქტი (მხოლოდ არა-ადმინისთვის) -->
             {% if not current_user.is_authenticated or not current_user.is_admin %}
                 <a href="{{ url_for('contact_page') }}" class="nav-link">კონტაქტი</a>
             {% endif %}
 
+            <!-- ⭐ MORE DROPDOWN - ადმინის გვერდები -->
             {% if current_user.is_authenticated and current_user.is_admin %}
-                <a href="{{ url_for('admin_dashboard') }}" class="nav-link">
-                    დეშბორდი
-                    <span class="admin-oval">
-                        <i class="fas fa-crown"></i>
-                        <span>ADMIN</span>
-                    </span>
-                </a>
-                <a href="{{ url_for('admin_orders') }}" class="nav-link">შეკვეთები</a>
+                <div class="dropdown">
+                    <button class="dropdown-btn" onclick="toggleDropdown()">
+                        <i class="fas fa-ellipsis-h"></i> მეტი
+                        <i class="fas fa-chevron-down"></i>
+                    </button>
+                    <div class="dropdown-content" id="dropdownContent">
+                        <a href="{{ url_for('admin_dashboard') }}">
+                            <i class="fas fa-chart-line"></i> დეშბორდი
+                        </a>
+                        <a href="{{ url_for('admin_products') }}">
+                            <i class="fas fa-box"></i> პროდუქტები
+                        </a>
+                        <a href="{{ url_for('admin_categories') }}">
+                            <i class="fas fa-tags"></i> კატეგორიები
+                        </a>
+                        <a href="{{ url_for('admin_orders') }}">
+                            <i class="fas fa-shopping-cart"></i> შეკვეთები
+                        </a>
+                        <a href="{{ url_for('admin_chat') }}">
+                            <i class="fas fa-comment-dots"></i> ჩატი
+                        </a>
+                        <div style="border-top: 1px solid #eee; margin: 5px 0;"></div>
+                        <a href="{{ url_for('admin_messages') }}">
+                            <i class="fas fa-envelope"></i> შეტყობინებები
+                            {% set unread = unread_messages_count|default(0) %}
+                            {% if unread > 0 %}
+                                <span style="margin-left: auto; background: var(--danger); color: white; padding: 0 8px; border-radius: 20px; font-size: 10px;">{{ unread }}</span>
+                            {% endif %}
+                        </a>
+                    </div>
+                </div>
 
-                <!-- შეტყობინებები - მხოლოდ ადმინისთვის -->
-                <a href="{{ url_for('admin_messages') }}" class="nav-link">
-                    <i class="fas fa-envelope"></i> შეტყობინებები
-                    {% set unread = unread_messages_count|default(0) %}
-                    {% if unread > 0 %}
-                        <span class="admin-oval" style="background: linear-gradient(135deg, var(--danger), #a71d2a);">
-                            <i class="fas fa-envelope"></i>
-                            <span>{{ unread }}</span>
-                        </span>
-                    {% endif %}
-                </a>
-                <a href="{{ url_for('admin_chat') }}" class="nav-link">
-                    <i class="fas fa-comment-dots" style="color: var(--gold);"></i> ჩატი
-                </a>
+                <!-- ADMIN BADGE -->
+                <span class="admin-oval">
+                    <i class="fas fa-crown"></i>
+                    <span>ADMIN</span>
+                </span>
             {% endif %}
         </div>
 
@@ -870,7 +987,7 @@ main {
             <i class="fas fa-info-circle"></i> ჩვენ შესახებ
         </a>
 
-        <!-- ✅ "ჩემი შეძენილი" - მხოლოდ ავტორიზებული მომხმარებლებისთვის -->
+        <!-- ჩემი შეძენილი (მხოლოდ ავტორიზებულისთვის) -->
         {% if current_user.is_authenticated %}
             <a href="{{ url_for('my_purchases') }}" class="sidebar-link" onclick="closeSidebar()">
                 <i class="fas fa-shopping-bag"></i> ჩემი შეძენილი
@@ -910,13 +1027,6 @@ main {
             <a href="{{ url_for('admin_orders') }}" class="sidebar-link" onclick="closeSidebar()">
                 <i class="fas fa-box"></i> შეკვეთები
             </a>
-            <a href="{{ url_for('admin_messages') }}" class="sidebar-link" onclick="closeSidebar()">
-                <i class="fas fa-envelope"></i> შეტყობინებები
-                {% set unread = unread_messages_count|default(0) %}
-                {% if unread > 0 %}
-                    <span style="margin-left: auto; background: var(--danger); color: white; padding: 0 8px; border-radius: 20px; font-size: 11px;">{{ unread }}</span>
-                {% endif %}
-            </a>
             <a href="{{ url_for('admin_products') }}" class="sidebar-link" onclick="closeSidebar()">
                 <i class="fas fa-tag"></i> პროდუქტები
             </a>
@@ -925,6 +1035,13 @@ main {
             </a>
             <a href="{{ url_for('admin_chat') }}" class="sidebar-link" onclick="closeSidebar()">
                 <i class="fas fa-comment-dots"></i> ჩატი
+            </a>
+            <a href="{{ url_for('admin_messages') }}" class="sidebar-link" onclick="closeSidebar()">
+                <i class="fas fa-envelope"></i> შეტყობინებები
+                {% set unread = unread_messages_count|default(0) %}
+                {% if unread > 0 %}
+                    <span style="margin-left: auto; background: var(--danger); color: white; padding: 0 8px; border-radius: 20px; font-size: 11px;">{{ unread }}</span>
+                {% endif %}
             </a>
         {% endif %}
 
@@ -1039,6 +1156,24 @@ function closeSidebar() {
     overlay.classList.remove('active');
     burgerBtn.classList.remove('active');
 }
+
+// ⭐ Dropdown toggle function
+function toggleDropdown() {
+    const dropdown = document.getElementById('dropdownContent');
+    const btn = document.querySelector('.dropdown-btn');
+    dropdown.classList.toggle('show');
+    btn.classList.toggle('active');
+}
+
+// Close dropdown when clicking outside
+document.addEventListener('click', function(event) {
+    const dropdown = document.getElementById('dropdownContent');
+    const btn = document.querySelector('.dropdown-btn');
+    if (!event.target.closest('.dropdown')) {
+        dropdown.classList.remove('show');
+        btn.classList.remove('active');
+    }
+});
 
 // Header scroll effect
 window.addEventListener('scroll', () => {
