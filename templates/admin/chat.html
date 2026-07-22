@@ -1021,6 +1021,7 @@ async function loadUserMessages(userId) {
             messageIdCache.add(msg.id);
             const isAdmin = !msg.is_from_user;
             const senderName = isAdmin ? 'ადმინისტრატორი' : (data.user_name || 'მომხმარებელი');
+            // Use the container directly
             appendMessageToContainer(msg, isAdmin, senderName);
         });
 
@@ -1034,7 +1035,6 @@ async function loadUserMessages(userId) {
         console.error('Error loading messages:', error);
     }
 }
-
 // ========== APPEND MESSAGE ==========
 function appendMessageToContainer(msg, isAdmin, senderName) {
     const container = document.getElementById('conversationMessagesDisplay');
@@ -1086,6 +1086,7 @@ function appendMessageToContainer(msg, isAdmin, senderName) {
 }
 
 // ========== SEND MESSAGE ==========
+// ========== SEND MESSAGE ==========
 async function sendMessage() {
     const textarea = document.getElementById('replyText');
     const message = textarea.value.trim();
@@ -1134,12 +1135,17 @@ async function sendMessage() {
             document.getElementById('voiceRecordingIndicator').style.display = 'none';
             document.getElementById('voiceBtn').classList.remove('recording');
 
+            // ✅ APPEND MESSAGE IMMEDIATELY
             if (data.message) {
-                // Remove from cache if exists and append
-                messageIdCache.delete(data.message.id);
-                appendMessageToContainer(data.message, true, 'ადმინისტრატორი');
-                lastMessageId = data.message.id;
+                // Create a message object for display
+                const msgData = data.message;
+                // Append as admin (right side)
+                appendMessageToContainer(msgData, true, 'ადმინისტრატორი');
+                lastMessageId = msgData.id;
                 scrollToBottom();
+            } else {
+                // Fallback: reload messages
+                await loadUserMessages(currentUserId);
             }
 
             await loadConversations();
