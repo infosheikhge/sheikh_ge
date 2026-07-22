@@ -45,7 +45,7 @@ def allowed_image(filename):
 
 
 # ============================================================================
-# CLOUDINARY CONFIGURATION (მნიშვნელოვანია app-ის შექმნის შემდეგ!)
+# CLOUDINARY CONFIGURATION
 # ============================================================================
 
 cloudinary.config(
@@ -107,18 +107,14 @@ def format_message_time(dt):
     else:
         return dt.strftime('%d.%m.%Y')
 
+
 @app.template_filter('image_url')
 def image_url_filter(image):
     if not image:
         return url_for('static', filename='uploads/default.jpg')
-
     if image.startswith('http'):
         return image
-
     return url_for('static', filename=image)
-
-
-
 
 
 # ============================================================================
@@ -199,17 +195,15 @@ def upload_to_cloudinary(file, folder='products'):
             file,
             folder=f"sheikh_ge/{folder}"
         )
-
         print("✅ CLOUDINARY SUCCESS")
         print(result["secure_url"])
-
         return result["secure_url"]
-
     except Exception as e:
         import traceback
         traceback.print_exc()
         print("❌ CLOUDINARY ERROR:", e)
-        raise e
+        return None
+
 
 def delete_from_cloudinary(public_id):
     """შლის ფაილს Cloudinary-დან"""
@@ -242,18 +236,16 @@ def add_product_image(product_id):
 
     for idx, file in enumerate(files):
         if file and file.filename and allowed_image(file.filename):
-            # Upload to Cloudinary
             cloudinary_url = upload_to_cloudinary(file, f'products/product_{product_id}')
             
             if cloudinary_url:
                 image = ProductImage(
                     product_id=product_id,
-                    image_path=cloudinary_url,  # Cloudinary URL
+                    image_path=cloudinary_url,
                     display_order=max_order + idx + 1
                 )
                 db.session.add(image)
             else:
-                # Fallback to local upload
                 filename = secure_filename(file.filename)
                 timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
                 unique_filename = f"product_{product_id}_{timestamp}_{idx}_{filename}"
@@ -278,13 +270,8 @@ def delete_product_image(image_id):
     image = ProductImage.query.get_or_404(image_id)
     product_id = image.product_id
     
-    # Check if it's a Cloudinary URL
     if 'cloudinary.com' in image.image_path:
-        # Extract public_id from URL
-        # Example: https://res.cloudinary.com/cloud_name/image/upload/v1234567/folder/filename.jpg
         try:
-            public_id = image.image_path.split('/')[-1].split('.')[0]
-            # Remove version and folder
             parts = image.image_path.split('/')
             for i, part in enumerate(parts):
                 if part == 'upload':
@@ -294,7 +281,6 @@ def delete_product_image(image_id):
         except Exception as e:
             print(f"Error deleting from Cloudinary: {e}")
     else:
-        # Delete local file
         file_path = os.path.join(app.config['UPLOAD_FOLDER'], 'products', os.path.basename(image.image_path))
         if os.path.exists(file_path):
             os.remove(file_path)
@@ -501,6 +487,8 @@ def chat_check_new():
             ChatMessage.is_from_user == False
         ).order_by(ChatMessage.created_at.asc()).all()
 
+        print(f"🔍 Found {len(messages)} new admin messages for user {user_id}")
+
         result = []
         for msg in messages:
             result.append({
@@ -635,7 +623,6 @@ def admin_chat_send():
         if not user:
             return jsonify({'success': False, 'error': 'User not found'}), 404
 
-        # Get or create conversation
         conversation = ChatConversation.query.filter_by(user_id=user_id, is_active=True).first()
         if not conversation:
             conversation = ChatConversation(
@@ -645,7 +632,6 @@ def admin_chat_send():
             db.session.add(conversation)
             db.session.flush()
 
-        # Voice message
         voice_path = None
         if is_voice:
             voice_data = request.form.get('voice_data')
@@ -662,7 +648,6 @@ def admin_chat_send():
                 except Exception as e:
                     print(f"Error saving voice: {e}")
 
-        # Create message
         chat_message = ChatMessage(
             user_id=user_id,
             admin_id=current_user.id,
@@ -676,14 +661,12 @@ def admin_chat_send():
         db.session.add(chat_message)
         db.session.flush()
 
-        # Update conversation
         conversation.last_message = message_text if message_text else '[ხმოვანი შეტყობინება]'
         conversation.last_message_time = datetime.now()
         conversation.unread_count += 1
         conversation.updated_at = datetime.now()
         db.session.commit()
 
-        # Return the saved message
         return jsonify({
             'success': True,
             'message_id': chat_message.id,
@@ -702,6 +685,7 @@ def admin_chat_send():
         print(f"❌ ERROR: {e}")
         db.session.rollback()
         return jsonify({'success': False, 'error': str(e)}), 500
+
 
 @app.route('/admin/api/chat/check-new/<int:user_id>')
 @admin_required
@@ -884,12 +868,10 @@ def add_product():
 
     image = request.files.get('image')
     if image and image.filename and allowed_image(image.filename):
-        # Upload to Cloudinary
         cloudinary_url = upload_to_cloudinary(image, 'products/main')
         if cloudinary_url:
             image_path = cloudinary_url
         else:
-            # Fallback to local
             filename = secure_filename(image.filename)
             timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
             unique_filename = f"{timestamp}_{filename}"
@@ -908,7 +890,6 @@ def add_product():
     db.session.add(product)
     db.session.commit()
 
-    # Handle additional images
     additional_images = request.files.getlist('additional_images')
     for idx, img in enumerate(additional_images):
         if img and img.filename and allowed_image(img.filename):
@@ -921,7 +902,6 @@ def add_product():
                 )
                 db.session.add(product_image)
             else:
-                # Fallback to local
                 filename = secure_filename(img.filename)
                 timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
                 unique_filename = f"product_{product.id}_{timestamp}_{idx}_{filename}"
@@ -952,10 +932,13 @@ def edit_product(product_id):
 
         image = request.files.get('image')
         if image and image.filename and allowed_image(image.filename):
-            # Delete old image if it's on Cloudinary
             if product.image and 'cloudinary.com' in product.image:
                 try:
-                    public_id = product.image.split('/')[-1].split('.')[0]
+                    parts = product.image.split('/')
+                    for i, part in enumerate(parts):
+                        if part == 'upload':
+                            public_id = '/'.join(parts[i+1:]).split('.')[0]
+                            break
                     delete_from_cloudinary(public_id)
                 except:
                     pass
@@ -964,12 +947,10 @@ def edit_product(product_id):
                 if os.path.exists(old_path):
                     os.remove(old_path)
 
-            # Upload new image to Cloudinary
             cloudinary_url = upload_to_cloudinary(image, 'products/main')
             if cloudinary_url:
                 product.image = cloudinary_url
             else:
-                # Fallback to local
                 filename = secure_filename(image.filename)
                 timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
                 unique_filename = f"{timestamp}_{filename}"
@@ -991,10 +972,13 @@ def edit_product(product_id):
 def delete_product(product_id):
     product = Product.query.get_or_404(product_id)
 
-    # Delete main image from Cloudinary if exists
     if product.image and 'cloudinary.com' in product.image:
         try:
-            public_id = product.image.split('/')[-1].split('.')[0]
+            parts = product.image.split('/')
+            for i, part in enumerate(parts):
+                if part == 'upload':
+                    public_id = '/'.join(parts[i+1:]).split('.')[0]
+                    break
             delete_from_cloudinary(public_id)
         except:
             pass
@@ -1003,11 +987,14 @@ def delete_product(product_id):
         if os.path.exists(main_path):
             os.remove(main_path)
 
-    # Delete additional images
     for img in product.additional_images:
         if img.image_path and 'cloudinary.com' in img.image_path:
             try:
-                public_id = img.image_path.split('/')[-1].split('.')[0]
+                parts = img.image_path.split('/')
+                for i, part in enumerate(parts):
+                    if part == 'upload':
+                        public_id = '/'.join(parts[i+1:]).split('.')[0]
+                        break
                 delete_from_cloudinary(public_id)
             except:
                 pass
