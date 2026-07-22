@@ -786,30 +786,31 @@ body {
                 <!-- ============================================ -->
                 <!-- ✅ ORDER SUMMARY WITH STATIC DELIVERY TEXT -->
                 <!-- ============================================ -->
-                <div class="order-summary">
-                    <div class="summary-row">
-                        <span class="label">ქვეჯამი:</span>
-                        <span class="value">₾{{ "%.2f"|format(order.total) }}</span>
-                    </div>
-                    <div class="summary-row total">
-                        <span class="label">სულ გადასახდელი:</span>
-                        <span class="value">₾{{ "%.2f"|format(order.total) }}</span>
-                    </div>
-                    
-                    <div class="delivery-note">
-                        <i class="fas fa-truck"></i>
-                        <div>
-                            <strong>მიწოდება:</strong> 
-                           
-                                ქალაქში - 10 ₾
-                                რაიონში - 15 ₾
-                            <br>
-                            <small style="color: var(--text-light); font-size: 12px;">
-                                <i class="fas fa-info-circle"></i> გადახდა ხდება მიწოდებისას
-                            </small>
-                        </div>
-                    </div>
-                </div>
+               <div class="order-summary">
+    <div class="summary-row">
+        <span class="label">📦 ქვეჯამი:</span>
+        <span class="value">₾{{ "%.2f"|format(order.total) }}</span>
+    </div>
+    <div class="summary-row">
+        <span class="label">🚚 მიწოდება:</span>
+        <span class="value">10-15 ₾</span>
+    </div>
+    <div class="summary-row total">
+        <span class="label">💰 სულ გადასახდელი:</span>
+        <span class="value">₾{{ "%.2f"|format(order.total + 15) }}</span>
+    </div>
+    
+    <div class="delivery-note">
+        <i class="fas fa-truck"></i>
+        <span>
+            <strong>მიწოდება:</strong> ქალაქში 10 ₾ • რაიონში 15 ₾
+            <br>
+            <small style="color: var(--text-light); font-size: 12px;">
+                💳 გადახდა ხდება მიწოდებისას
+            </small>
+        </span>
+    </div>
+</div>
                 <!-- ============================================ -->
             </div>
 
