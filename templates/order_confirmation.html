@@ -800,11 +800,9 @@ body {
                         <i class="fas fa-truck"></i>
                         <div>
                             <strong>მიწოდება:</strong> 
-                            {% if order.city and order.city.lower() in ['თბილისი', 'tbilisi', 'ბათუმი', 'batumi', 'ქუთაისი', 'kutaisi', 'რუსთავი', 'rustavi'] %}
+                           
                                 ქალაქში - 10 ₾
-                            {% else %}
                                 რაიონში - 15 ₾
-                            {% endif %}
                             <br>
                             <small style="color: var(--text-light); font-size: 12px;">
                                 <i class="fas fa-info-circle"></i> გადახდა ხდება მიწოდებისას
