@@ -332,7 +332,7 @@ body {
     }
 }
 
-/* Order Items - Mobile First Card Layout (NO HORIZONTAL SCROLL) */
+/* Order Items - Mobile First Card Layout */
 .order-items {
     margin: 25px 0;
     width: 100%;
@@ -373,9 +373,6 @@ body {
     box-shadow: var(--shadow-sm);
 }
 
-/* ============================================ */
-/* ✅ PRODUCT IMAGE - FIXED SIZE! */
-/* ============================================ */
 .product-image-card {
     width: 80px;
     height: 80px;
@@ -391,8 +388,6 @@ body {
         height: 60px;
     }
 }
-
-/* ============================================ */
 
 .product-info-card {
     flex: 2;
@@ -454,54 +449,90 @@ body {
     }
 }
 
-/* Total Row */
-.total-row-card {
-    display: flex;
-    justify-content: flex-end;
-    align-items: baseline;
+/* ============================================ */
+/* ✅ TOTAL ROW WITH DELIVERY - UPDATED */
+/* ============================================ */
+.order-summary {
     margin-top: 25px;
     padding: 20px 25px;
     background: linear-gradient(135deg, #fff8eb, #fff);
     border-radius: 20px;
-    gap: 20px;
-    flex-wrap: wrap;
     border: 1px solid rgba(212,175,55,0.2);
 }
 
-@media (max-width: 550px) {
-    .total-row-card {
-        justify-content: center;
-        flex-direction: column;
-        align-items: center;
-        text-align: center;
-        padding: 18px;
-    }
+.summary-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 8px 0;
+    font-size: 15px;
+    color: var(--text);
+    flex-wrap: wrap;
 }
 
-.total-label-card {
+.summary-row.delivery {
+    border-bottom: 1px dashed rgba(212,175,55,0.2);
+    padding-bottom: 12px;
+    margin-bottom: 12px;
+}
+
+.summary-row.delivery .label {
+    color: var(--text-light);
+}
+
+.summary-row.delivery .value {
+    color: var(--gold-dark);
+    font-weight: 500;
+}
+
+.summary-row.total {
+    font-size: 22px;
+    font-weight: 700;
+    color: var(--gold-dark);
+    padding-top: 5px;
+}
+
+.summary-row.total .label {
     font-size: 18px;
-    font-weight: 600;
     color: var(--dark);
 }
 
-@media (max-width: 480px) {
-    .total-label-card {
-        font-size: 16px;
-    }
-}
-
-.total-amount-card {
-    font-size: 32px;
+.summary-row.total .value {
+    font-size: 28px;
     font-weight: 800;
-    color: var(--gold-dark);
     font-family: 'Cormorant Garamond', serif;
 }
 
-@media (max-width: 480px) {
-    .total-amount-card {
-        font-size: 28px;
+.delivery-note {
+    margin-top: 12px;
+    padding: 10px 16px;
+    background: rgba(212,175,55,0.06);
+    border-radius: 10px;
+    font-size: 13px;
+    color: var(--text-light);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.delivery-note i {
+    color: var(--gold);
+}
+
+@media (max-width: 550px) {
+    .order-summary {
+        padding: 18px;
+    }
+    
+    .summary-row.total {
+        font-size: 18px;
+    }
+    
+    .summary-row.total .value {
+        font-size: 24px;
     }
 }
+/* ============================================ */
 
 /* Action Buttons */
 .confirmation-actions {
@@ -559,7 +590,6 @@ body {
     background: linear-gradient(135deg, var(--gold-dark), var(--gold));
 }
 
-/* Print Button */
 .print-btn {
     background: transparent;
     border: 1.5px solid var(--gold);
@@ -572,7 +602,6 @@ body {
     box-shadow: none;
 }
 
-/* Decorative elements */
 .decorative-line {
     width: 80px;
     height: 2px;
@@ -728,7 +757,7 @@ body {
                 </div>
             </div>
 
-            <!-- Order Items - CARD BASED (NO TABLE, NO SCROLL!) -->
+            <!-- Order Items -->
             <div class="order-items">
                 <div class="section-title">
                     <i class="fas fa-box"></i>
@@ -738,7 +767,6 @@ body {
                 <div class="products-list">
                     {% for item in order.items %}
                     <div class="product-item-card">
-
                         <img
                             src="{{ item.product.image }}"
                             alt="{{ item.product.name }}"
@@ -746,25 +774,53 @@ body {
 
                         <div class="product-info-card">
                             <div class="product-name-card">{{ item.product.name }}</div>
-
                             <div class="product-details-card">
                                 <span><i class="fas fa-cube"></i> რაოდენობა: {{ item.quantity }}</span>
                                 <span><i class="fas fa-tag"></i> ფასი: ₾{{ "%.2f"|format(item.price) }}</span>
                             </div>
                         </div>
-
                         <div class="product-total-card">
                             ₾{{ "%.2f"|format(item.price * item.quantity) }}
                         </div>
-
                     </div>
                     {% endfor %}
                 </div>
 
-                <div class="total-row-card">
-                    <span class="total-label-card">სულ გადასახდელი:</span>
-                    <span class="total-amount-card">₾{{ "%.2f"|format(order.total) }}</span>
+                <!-- ============================================ -->
+                <!-- ✅ NEW ORDER SUMMARY WITH DELIVERY -->
+                <!-- ============================================ -->
+                <div class="order-summary">
+                    <div class="summary-row">
+                        <span class="label">ქვეჯამი:</span>
+                        <span class="value">₾{{ "%.2f"|format(order.subtotal or order.total - order.delivery_fee) }}</span>
+                    </div>
+                    <div class="summary-row delivery">
+                        <span class="label">
+                            <i class="fas fa-truck" style="color: var(--gold);"></i>
+                            მიწოდება:
+                        </span>
+                        <span class="value">₾{{ "%.2f"|format(order.delivery_fee or 0) }}</span>
+                    </div>
+                    <div class="summary-row total">
+                        <span class="label">სულ გადასახდელი:</span>
+                        <span class="value">₾{{ "%.2f"|format(order.total) }}</span>
+                    </div>
+                    
+                    <div class="delivery-note">
+                        <i class="fas fa-info-circle"></i>
+                        <span>
+                            {% if order.delivery_fee == 10 %}
+                                📍 მიწოდება ქალაქში: 10 ₾
+                            {% elif order.delivery_fee == 15 %}
+                                📍 მიწოდება რაიონში: 15 ₾
+                            {% else %}
+                                📍 მიწოდება: {{ "%.2f"|format(order.delivery_fee) }} ₾
+                            {% endif %}
+                            • გადახდა ხდება მიწოდებისას
+                        </span>
+                    </div>
                 </div>
+                <!-- ============================================ -->
             </div>
 
             <div class="decorative-line"></div>
