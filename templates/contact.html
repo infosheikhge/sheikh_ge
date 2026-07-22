@@ -848,21 +848,77 @@ function appendMessage(msg, isUser) {
 }
 
 // ========== SEND MESSAGE ==========
+// ========== SEND MESSAGE ==========
 async function sendMessage() {
-    // ... existing code ...
-    
-    console.log("🔵 Sending message:", message);
-    console.log("🔵 User ID:", userId);
-    
-    const response = await fetch('/api/chat/send', {
-        method: 'POST',
-        body: formData
-    });
+    const input = document.getElementById('messageInput');
+    const message = input.value.trim();
 
-    const data = await response.json();
-    console.log("📥 Response:", data);
-    
-    // ... rest of code ...
+    if (!message && selectedFiles.length === 0 && !voiceBlob) {
+        alert('გთხოვთ დაწერეთ შეტყობინება ან აირჩიეთ ფაილი');
+        return;
+    }
+
+    const sendBtn = document.getElementById('sendBtn');
+    sendBtn.disabled = true;
+    sendBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+
+    try {
+        const formData = new FormData();
+        formData.append('name', userName);
+        formData.append('phone', userPhone);
+        formData.append('email', userEmail);
+        formData.append('message', message);
+
+        selectedFiles.forEach(file => {
+            formData.append('file', file);
+        });
+
+        if (voiceBlob) {
+            const reader = new FileReader();
+            const voiceData = await new Promise((resolve) => {
+                reader.onloadend = () => resolve(reader.result);
+                reader.readAsDataURL(voiceBlob);
+            });
+            formData.append('is_voice', 'true');
+            formData.append('voice_data', voiceData);
+            formData.append('voice_duration', recordSeconds);
+        }
+
+        console.log("🔵 Sending message:", message);
+        console.log("🔵 User ID:", userId);
+
+        const response = await fetch('/api/chat/send', {
+            method: 'POST',
+            body: formData
+        });
+
+        const data = await response.json();
+        console.log("📥 Response:", data);
+
+        if (data.success) {
+            input.value = '';
+            input.style.height = 'auto';
+            selectedFiles = [];
+            voiceBlob = null;
+            updateFilePreview();
+            document.getElementById('voiceRecordingIndicator').style.display = 'none';
+            document.getElementById('voiceBtn').classList.remove('recording');
+
+            // Reload messages to get the sent message with proper ID
+            setTimeout(() => {
+                loadMessages();
+            }, 300);
+        } else {
+            alert(data.error || 'შეცდომა გაგზავნისას');
+        }
+    } catch (error) {
+        console.error('Error sending message:', error);
+        alert('შეცდომა გაგზავნისას');
+    } finally {
+        sendBtn.disabled = false;
+        sendBtn.innerHTML = '<i class="fas fa-paper-plane"></i>';
+        input.focus();
+    }
 }
 // ========== VOICE RECORDING ==========
 async function toggleVoiceRecording() {
