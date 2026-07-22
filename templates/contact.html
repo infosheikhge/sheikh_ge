@@ -904,10 +904,25 @@ async function sendMessage() {
             document.getElementById('voiceRecordingIndicator').style.display = 'none';
             document.getElementById('voiceBtn').classList.remove('recording');
 
-            // Reload messages to get the sent message with proper ID
-            setTimeout(() => {
-                loadMessages();
-            }, 300);
+            // ✅ ვამატებთ მესიჯს პირდაპირ!
+            const newMsg = {
+                id: data.message_id,
+                message: message,
+                is_from_user: true,
+                is_voice: false,
+                voice_path: null,
+                voice_duration: 0,
+                file_path: null,
+                file_name: null,
+                created_at: new Date().toISOString()
+            };
+            appendMessage(newMsg, true);
+            
+            if (data.message_id) {
+                lastMessageId = data.message_id;
+            }
+            
+            scrollToBottom();
         } else {
             alert(data.error || 'შეცდომა გაგზავნისას');
         }
