@@ -450,7 +450,7 @@ body {
 }
 
 /* ============================================ */
-/* ✅ TOTAL ROW WITH DELIVERY - UPDATED */
+/* ✅ ORDER SUMMARY WITH DELIVERY TEXT */
 /* ============================================ */
 .order-summary {
     margin-top: 25px;
@@ -469,26 +469,13 @@ body {
     flex-wrap: wrap;
 }
 
-.summary-row.delivery {
-    border-bottom: 1px dashed rgba(212,175,55,0.2);
-    padding-bottom: 12px;
-    margin-bottom: 12px;
-}
-
-.summary-row.delivery .label {
-    color: var(--text-light);
-}
-
-.summary-row.delivery .value {
-    color: var(--gold-dark);
-    font-weight: 500;
-}
-
 .summary-row.total {
     font-size: 22px;
     font-weight: 700;
     color: var(--gold-dark);
     padding-top: 5px;
+    border-top: 2px solid var(--gold);
+    margin-top: 5px;
 }
 
 .summary-row.total .label {
@@ -504,19 +491,25 @@ body {
 
 .delivery-note {
     margin-top: 12px;
-    padding: 10px 16px;
-    background: rgba(212,175,55,0.06);
+    padding: 12px 16px;
+    background: rgba(212,175,55,0.08);
     border-radius: 10px;
-    font-size: 13px;
-    color: var(--text-light);
+    font-size: 14px;
+    color: var(--text);
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: 10px;
     flex-wrap: wrap;
+    border-left: 3px solid var(--gold);
 }
 
 .delivery-note i {
     color: var(--gold);
+    font-size: 18px;
+}
+
+.delivery-note strong {
+    color: var(--gold-dark);
 }
 
 @media (max-width: 550px) {
@@ -530,6 +523,10 @@ body {
     
     .summary-row.total .value {
         font-size: 24px;
+    }
+    
+    .delivery-note {
+        font-size: 13px;
     }
 }
 /* ============================================ */
@@ -787,19 +784,12 @@ body {
                 </div>
 
                 <!-- ============================================ -->
-                <!-- ✅ NEW ORDER SUMMARY WITH DELIVERY -->
+                <!-- ✅ ORDER SUMMARY WITH STATIC DELIVERY TEXT -->
                 <!-- ============================================ -->
                 <div class="order-summary">
                     <div class="summary-row">
                         <span class="label">ქვეჯამი:</span>
-                        <span class="value">₾{{ "%.2f"|format(order.subtotal or order.total - order.delivery_fee) }}</span>
-                    </div>
-                    <div class="summary-row delivery">
-                        <span class="label">
-                            <i class="fas fa-truck" style="color: var(--gold);"></i>
-                            მიწოდება:
-                        </span>
-                        <span class="value">₾{{ "%.2f"|format(order.delivery_fee or 0) }}</span>
+                        <span class="value">₾{{ "%.2f"|format(order.total) }}</span>
                     </div>
                     <div class="summary-row total">
                         <span class="label">სულ გადასახდელი:</span>
@@ -807,17 +797,19 @@ body {
                     </div>
                     
                     <div class="delivery-note">
-                        <i class="fas fa-info-circle"></i>
-                        <span>
-                            {% if order.delivery_fee == 10 %}
-                                📍 მიწოდება ქალაქში: 10 ₾
-                            {% elif order.delivery_fee == 15 %}
-                                📍 მიწოდება რაიონში: 15 ₾
+                        <i class="fas fa-truck"></i>
+                        <div>
+                            <strong>მიწოდება:</strong> 
+                            {% if order.city and order.city.lower() in ['თბილისი', 'tbilisi', 'ბათუმი', 'batumi', 'ქუთაისი', 'kutaisi', 'რუსთავი', 'rustavi'] %}
+                                ქალაქში - 10 ₾
                             {% else %}
-                                📍 მიწოდება: {{ "%.2f"|format(order.delivery_fee) }} ₾
+                                რაიონში - 15 ₾
                             {% endif %}
-                            • გადახდა ხდება მიწოდებისას
-                        </span>
+                            <br>
+                            <small style="color: var(--text-light); font-size: 12px;">
+                                <i class="fas fa-info-circle"></i> გადახდა ხდება მიწოდებისას
+                            </small>
+                        </div>
                     </div>
                 </div>
                 <!-- ============================================ -->
