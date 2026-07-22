@@ -1,0 +1,295 @@
+{% extends "base.html" %}
+
+{% block content %}
+<style>
+.purchases-page {
+    max-width: 1200px;
+    margin: 40px auto;
+    padding: 0 20px;
+}
+
+.purchases-header {
+    margin-bottom: 30px;
+}
+
+.purchases-header h1 {
+    font-size: 32px;
+    font-family: 'Cormorant Garamond', serif;
+    color: var(--dark);
+    margin-bottom: 10px;
+}
+
+.purchases-header p {
+    color: var(--text-light);
+    font-size: 16px;
+}
+
+/* Order Card */
+.order-card {
+    background: white;
+    border-radius: 16px;
+    border: 1px solid rgba(212,175,55,0.12);
+    padding: 25px;
+    margin-bottom: 25px;
+    transition: var(--transition);
+    box-shadow: var(--shadow-sm);
+}
+
+.order-card:hover {
+    box-shadow: var(--shadow-md);
+    border-color: var(--gold);
+}
+
+.order-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 15px;
+    padding-bottom: 15px;
+    border-bottom: 1px solid rgba(212,175,55,0.1);
+    margin-bottom: 15px;
+}
+
+.order-id {
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--dark);
+}
+
+.order-id span {
+    color: var(--gold);
+}
+
+.order-date {
+    font-size: 14px;
+    color: var(--text-light);
+}
+
+.order-status {
+    padding: 4px 16px;
+    border-radius: 30px;
+    font-size: 12px;
+    font-weight: 500;
+}
+
+.order-status.pending {
+    background: #fff3cd;
+    color: #856404;
+}
+
+.order-status.completed {
+    background: #d4edda;
+    color: #155724;
+}
+
+.order-status.cancelled {
+    background: #f8d7da;
+    color: #721c24;
+}
+
+/* Order Items */
+.order-items {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.order-item {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    padding: 10px;
+    background: #f8f6f2;
+    border-radius: 12px;
+}
+
+.order-item-image {
+    width: 60px;
+    height: 60px;
+    object-fit: cover;
+    border-radius: 8px;
+    border: 1px solid rgba(212,175,55,0.15);
+    flex-shrink: 0;
+}
+
+.order-item-info {
+    flex: 1;
+}
+
+.order-item-name {
+    font-weight: 600;
+    color: var(--dark);
+    font-size: 15px;
+}
+
+.order-item-details {
+    display: flex;
+    gap: 20px;
+    font-size: 13px;
+    color: var(--text-light);
+    flex-wrap: wrap;
+}
+
+.order-item-details i {
+    color: var(--gold);
+}
+
+.order-item-price {
+    font-weight: 700;
+    color: var(--gold-dark);
+    font-size: 16px;
+    white-space: nowrap;
+}
+
+.order-total {
+    display: flex;
+    justify-content: flex-end;
+    padding-top: 15px;
+    border-top: 1px solid rgba(212,175,55,0.1);
+    margin-top: 15px;
+}
+
+.order-total-label {
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--dark);
+}
+
+.order-total-amount {
+    font-size: 22px;
+    font-weight: 700;
+    color: var(--gold-dark);
+    font-family: 'Cormorant Garamond', serif;
+    margin-left: 15px;
+}
+
+/* Empty State */
+.empty-state {
+    text-align: center;
+    padding: 80px 20px;
+    background: white;
+    border-radius: 16px;
+    border: 1px solid rgba(212,175,55,0.1);
+}
+
+.empty-state i {
+    font-size: 64px;
+    color: #ddd;
+    margin-bottom: 20px;
+}
+
+.empty-state h3 {
+    font-size: 24px;
+    color: var(--dark);
+    margin-bottom: 10px;
+    font-family: 'Cormorant Garamond', serif;
+}
+
+.empty-state p {
+    color: var(--text-light);
+    margin-bottom: 25px;
+}
+
+.btn-gold {
+    background: linear-gradient(135deg, var(--gold), var(--gold-dark));
+    color: white;
+    padding: 12px 30px;
+    border-radius: 40px;
+    text-decoration: none;
+    font-weight: 500;
+    transition: var(--transition);
+    display: inline-block;
+}
+
+.btn-gold:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-gold);
+}
+
+@media (max-width: 600px) {
+    .order-header {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+    
+    .order-item {
+        flex-wrap: wrap;
+    }
+    
+    .order-item-price {
+        margin-left: auto;
+    }
+    
+    .order-total {
+        flex-direction: column;
+        align-items: flex-end;
+    }
+}
+</style>
+
+<div class="purchases-page">
+    <div class="purchases-header">
+        <h1>📦 ჩემი შეძენილი პროდუქტები</h1>
+        <p>აქ ნახავთ ყველა თქვენს მიერ შეძენილ პროდუქტს</p>
+    </div>
+
+    {% if orders %}
+        {% for order in orders %}
+        <div class="order-card">
+            <div class="order-header">
+                <div>
+                    <div class="order-id">შეკვეთა #<span>{{ "%04d"|format(order.id) }}</span></div>
+                    <div class="order-date">
+                        <i class="fas fa-calendar-alt" style="color: var(--gold);"></i>
+                        {{ order.created_at.strftime('%d.%m.%Y %H:%M') }}
+                    </div>
+                </div>
+                <span class="order-status {{ order.status }}">
+                    <i class="fas fa-{% if order.status == 'pending' %}clock{% elif order.status == 'completed' %}check-circle{% else %}times-circle{% endif %}"></i>
+                    {{ order.status|default('pending')|replace('pending', 'მოლოდინი')|replace('completed', 'დასრულებული')|replace('cancelled', 'გაქცევა') }}
+                </span>
+            </div>
+
+            <div class="order-items">
+                {% for item in order.items %}
+                <div class="order-item">
+                    <img 
+                        src="{{ item.product.image|image_url }}" 
+                        alt="{{ item.product.name }}"
+                        class="order-item-image"
+                        onerror="this.src='/static/uploads/default.jpg'">
+                    
+                    <div class="order-item-info">
+                        <div class="order-item-name">{{ item.product.name }}</div>
+                        <div class="order-item-details">
+                            <span><i class="fas fa-cube"></i> რაოდენობა: {{ item.quantity }}</span>
+                            <span><i class="fas fa-tag"></i> ფასი: ₾{{ "%.2f"|format(item.price) }}</span>
+                        </div>
+                    </div>
+                    
+                    <div class="order-item-price">
+                        ₾{{ "%.2f"|format(item.price * item.quantity) }}
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+
+            <div class="order-total">
+                <span class="order-total-label">სულ გადასახდელი:</span>
+                <span class="order-total-amount">₾{{ "%.2f"|format(order.total) }}</span>
+            </div>
+        </div>
+        {% endfor %}
+    {% else %}
+        <div class="empty-state">
+            <i class="fas fa-shopping-bag"></i>
+            <h3>ჯერ არაფერი გიყიდიათ</h3>
+            <p>დაათვალიერეთ ჩვენი მაღაზია და იყიდეთ თქვენთვის სასურველი პროდუქტები</p>
+            <a href="{{ url_for('shop') }}" class="btn-gold">
+                <i class="fas fa-store"></i> მაღაზიაში წასვლა
+            </a>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}
