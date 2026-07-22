@@ -799,9 +799,11 @@ async function loadMessages() {
 }
 
 // ========== APPEND MESSAGE ==========
+// ========== APPEND MESSAGE ==========
 function appendMessage(msg, isUser) {
     const container = document.getElementById('conversationMessages');
 
+    // ✅ Check if message already exists
     if (messageIdCache.has(msg.id)) return;
     messageIdCache.add(msg.id);
 
@@ -840,74 +842,28 @@ function appendMessage(msg, isUser) {
 
     bubble.innerHTML = content;
     container.appendChild(bubble);
+    
+    // ✅ Scroll to bottom after adding message
+    scrollToBottom();
 }
 
 // ========== SEND MESSAGE ==========
 async function sendMessage() {
-    const input = document.getElementById('messageInput');
-    const message = input.value.trim();
+    // ... existing code ...
+    
+    console.log("🔵 Sending message:", message);
+    console.log("🔵 User ID:", userId);
+    
+    const response = await fetch('/api/chat/send', {
+        method: 'POST',
+        body: formData
+    });
 
-    if (!message && selectedFiles.length === 0 && !voiceBlob) return;
-
-    const sendBtn = document.getElementById('sendBtn');
-    sendBtn.disabled = true;
-    sendBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
-
-    try {
-        const formData = new FormData();
-        formData.append('name', userName);
-        formData.append('phone', userPhone);
-        formData.append('email', userEmail);
-        formData.append('message', message);
-
-        selectedFiles.forEach(file => {
-            formData.append('file', file);
-        });
-
-        if (voiceBlob) {
-            const reader = new FileReader();
-            const voiceData = await new Promise((resolve) => {
-                reader.onloadend = () => resolve(reader.result);
-                reader.readAsDataURL(voiceBlob);
-            });
-            formData.append('is_voice', 'true');
-            formData.append('voice_data', voiceData);
-            formData.append('voice_duration', recordSeconds);
-        }
-
-        const response = await fetch('/api/chat/send', {
-            method: 'POST',
-            body: formData
-        });
-
-        const data = await response.json();
-
-        if (data.success) {
-            input.value = '';
-            input.style.height = 'auto';
-            selectedFiles = [];
-            voiceBlob = null;
-            updateFilePreview();
-            document.getElementById('voiceRecordingIndicator').style.display = 'none';
-            document.getElementById('voiceBtn').classList.remove('recording');
-
-            // Reload messages to get the sent message with proper ID
-            setTimeout(() => {
-                loadMessages();
-            }, 300);
-        } else {
-            alert(data.error || 'შეცდომა გაგზავნისას');
-        }
-    } catch (error) {
-        console.error('Error sending message:', error);
-        alert('შეცდომა გაგზავნისას');
-    } finally {
-        sendBtn.disabled = false;
-        sendBtn.innerHTML = '<i class="fas fa-paper-plane"></i>';
-        input.focus();
-    }
+    const data = await response.json();
+    console.log("📥 Response:", data);
+    
+    // ... rest of code ...
 }
-
 // ========== VOICE RECORDING ==========
 async function toggleVoiceRecording() {
     if (isRecording) {
@@ -976,6 +932,7 @@ function cancelVoiceRecording() {
 }
 
 // ========== USER POLLING - ახალი მესიჯების შემოწმება ==========
+// ========== USER POLLING - ახალი მესიჯების შემოწმება ==========
 function startUserPolling() {
     if (isUserPollingActive) return;
     isUserPollingActive = true;
@@ -990,16 +947,20 @@ function startUserPolling() {
         if (!isIdentified) return;
 
         try {
-            // ადმინის მესიჯების შემოწმება (is_from_user == false)
+            // ✅ ადმინის მესიჯების შემოწმება (is_from_user == false)
             const response = await fetch(`/api/chat/check-new?user_id=${userId || ''}&last_id=${lastId}`);
             const data = await response.json();
+
+            console.log("🔄 Polling check:", data.messages.length, "new messages");
 
             if (data.messages && data.messages.length > 0) {
                 const newMessages = data.messages.filter(msg => !messageIdCache.has(msg.id));
 
                 if (newMessages.length > 0) {
+                    console.log("🟢 Adding", newMessages.length, "new messages");
                     newMessages.forEach(msg => {
-                        appendMessage(msg, false);  // false = admin message
+                        // ✅ false = admin message (right side)
+                        appendMessage(msg, false);
                     });
 
                     const lastMsg = newMessages[newMessages.length - 1];
@@ -1016,7 +977,6 @@ function startUserPolling() {
         }
     }, 3000);  // 3 წამში ერთხელ
 }
-
 // ========== UTILITIES ==========
 function formatDate(isoString) {
     if (!isoString) return '';
