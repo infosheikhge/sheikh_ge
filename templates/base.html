@@ -757,6 +757,13 @@ main {
             <a href="{{ url_for('shop') }}" class="nav-link">მაღაზია</a>
             <a href="{{ url_for('about') }}" class="nav-link">ჩვენ შესახებ</a>
 
+            <!-- ✅ "ჩემი შეძენილი" - მხოლოდ ავტორიზებული მომხმარებლებისთვის -->
+            {% if current_user.is_authenticated %}
+                <a href="{{ url_for('my_purchases') }}" class="nav-link">
+                    <i class="fas fa-shopping-bag"></i> ჩემი შეძენილი
+                </a>
+            {% endif %}
+
             <!-- კონტაქტი - მხოლოდ არა-ადმინისთვის -->
             {% if not current_user.is_authenticated or not current_user.is_admin %}
                 <a href="{{ url_for('contact_page') }}" class="nav-link">კონტაქტი</a>
@@ -863,6 +870,13 @@ main {
             <i class="fas fa-info-circle"></i> ჩვენ შესახებ
         </a>
 
+        <!-- ✅ "ჩემი შეძენილი" - მხოლოდ ავტორიზებული მომხმარებლებისთვის -->
+        {% if current_user.is_authenticated %}
+            <a href="{{ url_for('my_purchases') }}" class="sidebar-link" onclick="closeSidebar()">
+                <i class="fas fa-shopping-bag"></i> ჩემი შეძენილი
+            </a>
+        {% endif %}
+
         <!-- კონტაქტი - მხოლოდ არა-ადმინისთვის -->
         {% if not current_user.is_authenticated or not current_user.is_admin %}
             <a href="{{ url_for('contact_page') }}" class="sidebar-link" onclick="closeSidebar()">
@@ -964,6 +978,9 @@ main {
                 <a href="{{ url_for('about') }}">ჩვენ შესახებ</a>
                 {% if not current_user.is_authenticated or not current_user.is_admin %}
                     <a href="{{ url_for('contact_page') }}">კონტაქტი</a>
+                {% endif %}
+                {% if current_user.is_authenticated %}
+                    <a href="{{ url_for('my_purchases') }}">ჩემი შეძენილი</a>
                 {% endif %}
             </div>
             <div class="footer-col">
