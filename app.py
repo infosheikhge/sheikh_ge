@@ -116,6 +116,50 @@ def image_url_filter(image):
         return image
 
     return url_for('static', filename=image)
+
+
+
+
+@app.route('/api/chat/check-new')
+def chat_check_new():
+    try:
+        user_id = request.args.get('user_id', type=int)
+        last_id = request.args.get('last_id', type=int, default=0)
+
+        if not user_id:
+            user_id = current_user.id if current_user.is_authenticated else None
+
+        if not user_id:
+            return jsonify({'messages': []})
+
+        # ✅ GET ADMIN MESSAGES (is_from_user == False)
+        messages = ChatMessage.query.filter(
+            ChatMessage.user_id == user_id,
+            ChatMessage.id > last_id,
+            ChatMessage.is_from_user == False  # ← მხოლოდ ადმინის მესიჯები!
+        ).order_by(ChatMessage.created_at.asc()).all()
+
+        print(f"🔍 Found {len(messages)} new admin messages for user {user_id}")
+
+        result = []
+        for msg in messages:
+            result.append({
+                'id': msg.id,
+                'message': msg.message,
+                'is_from_user': msg.is_from_user,
+                'is_voice': msg.is_voice,
+                'voice_path': msg.voice_path,
+                'voice_duration': msg.voice_duration,
+                'file_path': msg.file_path,
+                'file_name': msg.file_name,
+                'created_at': msg.created_at.isoformat()
+            })
+
+        return jsonify({'messages': result, 'success': True})
+
+    except Exception as e:
+        print(f"Error checking new messages: {e}")
+        return jsonify({'messages': [], 'success': False}), 500
 # ============================================================================
 # Main Routes
 # ============================================================================
