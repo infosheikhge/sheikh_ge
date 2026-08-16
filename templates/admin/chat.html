@@ -1087,6 +1087,7 @@ function appendMessageToContainer(msg, isAdmin, senderName) {
 
 // ========== SEND MESSAGE ==========
 // ========== SEND MESSAGE ==========
+// ========== SEND MESSAGE ==========
 async function sendMessage() {
     const textarea = document.getElementById('replyText');
     const message = textarea.value.trim();
@@ -1139,9 +1140,16 @@ async function sendMessage() {
             document.getElementById('voiceRecordingIndicator').style.display = 'none';
             document.getElementById('voiceBtn').classList.remove('recording');
 
-            // ✅ RELOAD ALL MESSAGES (გარანტირებული გამოსავალი)
-            await loadUserMessages(currentUserId);
-            
+            // ✅ APPEND MESSAGE IMMEDIATELY
+            if (data.message) {
+                // Add to cache and display
+                messageIdCache.delete(data.message.id);
+                appendMessageToContainer(data.message, true, 'ადმინისტრატორი');
+                lastMessageId = data.message.id;
+                scrollToBottom();
+            }
+
+            // Refresh conversations list
             await loadConversations();
         } else {
             alert(data.error || 'შეცდომა გაგზავნისას');
@@ -1155,7 +1163,6 @@ async function sendMessage() {
         textarea.focus();
     }
 }
-
 // ========== VOICE RECORDING ==========
 async function toggleVoiceRecording() {
     if (isRecording) {
