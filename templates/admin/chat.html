@@ -997,6 +997,7 @@ async function openConversation(userId) {
 }
 
 // ========== LOAD USER MESSAGES ==========
+// ========== LOAD USER MESSAGES ==========
 async function loadUserMessages(userId) {
     try {
         const response = await fetch(`/admin/api/chat/messages/${userId}`);
@@ -1019,9 +1020,8 @@ async function loadUserMessages(userId) {
 
         data.messages.forEach(msg => {
             messageIdCache.add(msg.id);
-            const isAdmin = !msg.is_from_user;
+            const isAdmin = !msg.is_from_user;  // ← if false → admin message
             const senderName = isAdmin ? 'ადმინისტრატორი' : (data.user_name || 'მომხმარებელი');
-            // Use the container directly
             appendMessageToContainer(msg, isAdmin, senderName);
         });
 
