@@ -629,6 +629,7 @@ def admin_chat_send():
         if not user:
             return jsonify({'success': False, 'error': 'User not found'}), 404
 
+        # Get or create conversation
         conversation = ChatConversation.query.filter_by(user_id=user_id, is_active=True).first()
         if not conversation:
             conversation = ChatConversation(
@@ -654,25 +655,28 @@ def admin_chat_send():
                 except Exception as e:
                     print(f"Error saving voice: {e}")
 
+        # ✅ CREATE MESSAGE
         chat_message = ChatMessage(
             user_id=user_id,
             admin_id=current_user.id,
             message=message_text,
-            is_from_user=False,
+            is_from_user=False,  # ← მნიშვნელოვანი! ადმინის მესიჯი
             is_read=False,
             is_voice=is_voice,
             voice_path=voice_path,
             voice_duration=voice_duration
         )
         db.session.add(chat_message)
-        db.session.flush()
+        db.session.flush()  # ← ID-ს მისაღებად
 
+        # Update conversation
         conversation.last_message = message_text if message_text else '[ხმოვანი შეტყობინება]'
         conversation.last_message_time = datetime.now()
         conversation.unread_count += 1
         conversation.updated_at = datetime.now()
         db.session.commit()
 
+        # ✅ RETURN THE SAVED MESSAGE
         return jsonify({
             'success': True,
             'message_id': chat_message.id,
@@ -688,7 +692,7 @@ def admin_chat_send():
         })
 
     except Exception as e:
-        print(f"❌ ERROR: {e}")
+        print(f"❌ ERROR in admin_chat_send: {e}")
         db.session.rollback()
         return jsonify({'success': False, 'error': str(e)}), 500
 
