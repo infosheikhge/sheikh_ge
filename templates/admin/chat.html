@@ -40,13 +40,14 @@
 .sidebar-header {
     padding: 20px;
     border-bottom: 1px solid var(--border-light);
+    background: white;
 }
 
 .top-row {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    margin-bottom: 20px;
+    margin-bottom: 15px;
 }
 
 .logo-area {
@@ -75,8 +76,9 @@
     color: #666;
 }
 
+/* ===== SEARCH ===== */
 .search-users-section {
-    margin-bottom: 15px;
+    margin-bottom: 12px;
 }
 
 .search-users-input-wrapper {
@@ -116,6 +118,7 @@
     border-radius: 12px;
     border: 1px solid var(--border-light);
     display: none;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
 }
 
 .search-result-item {
@@ -125,6 +128,10 @@
     padding: 10px 16px;
     border-bottom: 1px solid #f0f0f0;
     cursor: pointer;
+}
+
+.search-result-item:last-child {
+    border-bottom: none;
 }
 
 .search-result-item:hover {
@@ -153,6 +160,7 @@
     border-radius: 20px;
     font-size: 12px;
     cursor: pointer;
+    transition: background 0.2s;
 }
 
 .search-result-btn:hover {
@@ -165,20 +173,29 @@
     color: #999;
 }
 
+/* ===== FILTER TABS ===== */
 .filter-tabs {
     display: flex;
-    gap: 8px;
+    gap: 6px;
+    margin-top: 5px;
 }
 
 .filter-chip {
-    padding: 8px 16px;
+    padding: 6px 14px;
     background: #F0F2F5;
     border: none;
-    border-radius: 30px;
-    font-size: 13px;
+    border-radius: 20px;
+    font-size: 12px;
     cursor: pointer;
     color: #65676B;
     transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.filter-chip:hover {
+    background: #e4e6eb;
 }
 
 .filter-chip.active {
@@ -187,16 +204,22 @@
 }
 
 .filter-chip .badge {
-    background: rgba(255,255,255,0.3);
-    padding: 2px 8px;
+    background: rgba(255,255,255,0.25);
+    padding: 1px 8px;
     border-radius: 20px;
-    font-size: 11px;
+    font-size: 10px;
+    font-weight: 600;
 }
 
+.filter-chip.active .badge {
+    background: rgba(255,255,255,0.3);
+}
+
+/* ===== MESSAGES LIST ===== */
 .messages-list {
     flex: 1;
     overflow-y: auto;
-    padding: 10px 0;
+    padding: 5px 0;
 }
 
 .messages-list::-webkit-scrollbar {
@@ -218,6 +241,7 @@
     cursor: pointer;
     transition: background 0.2s;
     border-bottom: 1px solid #F0F2F5;
+    align-items: center;
 }
 
 .message-item:hover {
@@ -226,6 +250,7 @@
 
 .message-item.unread {
     background: rgba(197,160,89,0.08);
+    border-left: 3px solid var(--gold);
 }
 
 .item-avatar {
@@ -234,8 +259,8 @@
 }
 
 .avatar {
-    width: 45px;
-    height: 45px;
+    width: 42px;
+    height: 42px;
     background: linear-gradient(135deg, var(--gold), var(--gold-dark));
     border-radius: 50%;
     display: flex;
@@ -243,7 +268,7 @@
     justify-content: center;
     color: white;
     font-weight: 600;
-    font-size: 18px;
+    font-size: 16px;
 }
 
 .item-content {
@@ -254,7 +279,7 @@
 .item-header {
     display: flex;
     justify-content: space-between;
-    margin-bottom: 4px;
+    margin-bottom: 3px;
 }
 
 .sender-name {
@@ -266,6 +291,8 @@
 .time {
     font-size: 11px;
     color: #65676B;
+    flex-shrink: 0;
+    margin-left: 8px;
 }
 
 .item-preview {
@@ -283,7 +310,6 @@
     border-radius: 50%;
     flex-shrink: 0;
     margin-left: 10px;
-    margin-top: 15px;
 }
 
 .empty-state {
@@ -311,6 +337,8 @@
     background: white;
     border-bottom: 1px solid var(--border-light);
     display: none;
+    align-items: center;
+    gap: 12px;
 }
 
 .menu-toggle {
@@ -439,12 +467,12 @@
 #conversationMessagesDisplay {
     display: flex;
     flex-direction: column;
-    gap: 8px;
+    gap: 6px;
 }
 
 .message-wrapper {
     display: flex;
-    margin-bottom: 8px;
+    margin-bottom: 4px;
     animation: fadeIn 0.3s ease;
 }
 
@@ -752,6 +780,7 @@
         width: 320px;
         transform: translateX(-100%);
         box-shadow: 2px 0 10px rgba(0,0,0,0.1);
+        border-radius: 0;
     }
     .chat-sidebar.open {
         transform: translateX(0);
@@ -761,6 +790,10 @@
     }
     .message-bubble {
         max-width: 85%;
+    }
+    .chat-wrapper {
+        border-radius: 0;
+        height: calc(100vh - 60px);
     }
 }
 
@@ -786,16 +819,18 @@
             <div class="search-users-section">
                 <div class="search-users-input-wrapper">
                     <i class="fas fa-search"></i>
-                    <input type="text" id="userSearchInput" placeholder="🔍 მომხმარებლის ძებნა (სახელი, ტელეფონი, მეილი)..."
+                    <input type="text" id="userSearchInput" placeholder="🔍 მომხმარებლის ძებნა..."
                            onkeyup="searchUsers(this.value)">
                 </div>
                 <div class="search-results" id="searchResults"></div>
             </div>
 
             <div class="filter-tabs">
-                <button class="filter-chip active" onclick="filterConversations('all', this)">📋 ყველა</button>
+                <button class="filter-chip active" onclick="filterConversations('all', this)">
+                    <i class="fas fa-list"></i> ყველა
+                </button>
                 <button class="filter-chip" onclick="filterConversations('unread', this)">
-                    🔴 წაუკითხავი
+                    <i class="fas fa-circle" style="color:#C5A059;font-size:8px;"></i> წაუკითხავი
                     <span class="badge" id="unreadBadge">0</span>
                 </button>
             </div>
@@ -816,6 +851,7 @@
                 <i class="fas fa-bars"></i>
             </button>
             <span style="font-weight: 600; color: var(--gold);">💬 ჩატი</span>
+            <span style="font-size:12px;color:#999;margin-left:auto;" id="mobileTotalCount">0</span>
         </div>
 
         <div class="chat-placeholder" id="chatPlaceholder">
@@ -931,7 +967,7 @@ function searchUsers(query) {
                             </div>
                         </div>
                         <button class="search-result-btn" onclick="startChatWithUser(${user.id}, '${escapeHtml(user.name)}', '${escapeHtml(user.email || '')}', '${escapeHtml(user.phone || '')}')">
-                            <i class="fas fa-comment"></i> 💬 ჩატი
+                            <i class="fas fa-comment"></i> ჩატი
                         </button>
                     </div>
                 `).join('');
@@ -1037,7 +1073,9 @@ function renderConversationsList() {
     const container = document.getElementById('conversationsList');
     const conversations = Object.values(allConversations);
 
-    document.getElementById('totalCount').textContent = conversations.length;
+    const total = conversations.length;
+    document.getElementById('totalCount').textContent = total;
+    document.getElementById('mobileTotalCount').textContent = total;
 
     let filtered = conversations;
     if (currentFilter === 'unread') {
@@ -1128,14 +1166,11 @@ async function loadUserMessages(userId) {
             return;
         }
 
-      data.messages.forEach(msg => {
-    const isAdmin = !msg.is_from_user;
-    const senderName = isAdmin
-        ? '🛡️ ადმინისტრატორი'
-        : (data.user_name || '👤 მომხმარებელი');
-
-    appendMessageToContainer(msg, isAdmin, senderName);
-});
+        data.messages.forEach(msg => {
+            const isAdmin = !msg.is_from_user;
+            const senderName = isAdmin ? '🛡️ ადმინისტრატორი' : (data.user_name || '👤 მომხმარებელი');
+            appendMessageToContainer(msg, isAdmin, senderName);
+        });
 
         if (data.messages.length > 0) {
             lastMessageId = data.messages[data.messages.length - 1].id;
