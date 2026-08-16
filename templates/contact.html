@@ -2,7 +2,6 @@
 
 {% block content %}
 <style>
-/* ... სტილები იგივეა რაც წინა ... */
 :root {
     --gold: #D4AF37;
     --gold-dark: #996515;
@@ -12,7 +11,7 @@
     --text-light: #7a7a7a;
     --card-bg: #ffffff;
     --shadow-gold: 0 15px 35px rgba(212, 175, 55, 0.12);
-    --shadow-lg: 0 25px 45px -12px rgba(0, 0, 0, 0.15);
+    --shadow-sm: 0 12px 28px rgba(0, 0, 0, 0.05);
     --transition: all 0.4s cubic-bezier(0.2, 0.9, 0.4, 1.1);
 }
 
@@ -36,6 +35,7 @@
     }
 }
 
+/* LEFT SIDE - INFO */
 .contact-info {
     padding-right: 30px;
 }
@@ -101,6 +101,7 @@
     font-size: 14px;
 }
 
+/* RIGHT SIDE - CHAT */
 .chat-container {
     background: white;
     border-radius: 24px;
@@ -162,6 +163,7 @@
     display: block;
 }
 
+/* MESSAGES AREA */
 .messages-area {
     flex: 1;
     padding: 20px 24px;
@@ -284,6 +286,7 @@
     30% { transform: translateY(-8px); opacity: 1; }
 }
 
+/* INPUT AREA */
 .chat-input-area {
     padding: 16px 24px;
     background: white;
@@ -430,6 +433,7 @@
     font-size: 14px;
 }
 
+/* USER IDENTIFY FORM */
 .user-identify-form {
     padding: 16px 24px;
     background: #f8f6f2;
@@ -522,7 +526,7 @@
     <div class="contact-grid">
         <!-- LEFT: Contact Info -->
         <div class="contact-info">
-            <h2>დაგვიკავშირდით</h2>
+            <h2>📬 დაგვიკავშირდით</h2>
             <p class="subtitle">
                 მოგვწერეთ ნებისმიერ საკითხზე. ჩვენი გუნდი დაგეხმარებათ
                 რაც შეიძლება სწრაფად.
@@ -532,28 +536,28 @@
                 <div class="info-card-item">
                     <div class="info-icon"><i class="fas fa-map-marker-alt"></i></div>
                     <div class="info-text">
-                        <h4>მისამართი</h4>
+                        <h4>📍 მისამართი</h4>
                         <p>თბილისი, საქართველო</p>
                     </div>
                 </div>
                 <div class="info-card-item">
                     <div class="info-icon"><i class="fas fa-phone-alt"></i></div>
                     <div class="info-text">
-                        <h4>ტელეფონი</h4>
+                        <h4>📞 ტელეფონი</h4>
                         <p>+995 555 77 88 27</p>
                     </div>
                 </div>
                 <div class="info-card-item">
                     <div class="info-icon"><i class="fas fa-envelope"></i></div>
                     <div class="info-text">
-                        <h4>ელ. ფოსტა</h4>
+                        <h4>✉️ ელ. ფოსტა</h4>
                         <p>info.sheikh.ge@gmail.com</p>
                     </div>
                 </div>
                 <div class="info-card-item">
                     <div class="info-icon"><i class="fas fa-clock"></i></div>
                     <div class="info-text">
-                        <h4>სამუშაო საათები</h4>
+                        <h4>🕐 სამუშაო საათები</h4>
                         <p>24/7</p>
                     </div>
                 </div>
@@ -567,12 +571,12 @@
                 <div class="chat-header-left">
                     <div class="status-dot"></div>
                     <div>
-                        <h3>მხარდაჭერა</h3>
+                        <h3>💬 მხარდაჭერა</h3>
                         <small>ონლაინ 24/7</small>
                     </div>
                 </div>
                 <div class="chat-user-info" id="chatUserInfo">
-                    <strong id="userNameDisplay">სტუმარი</strong>
+                    <strong id="userNameDisplay">👤 სტუმარი</strong>
                     <span id="userStatusDisplay">● ონლაინ</span>
                 </div>
             </div>
@@ -588,19 +592,19 @@
                     <span class="typing-dot"></span>
                     <span class="typing-dot"></span>
                     <span class="typing-dot"></span>
-                    <span style="margin-left: 6px; font-size: 12px; color: #999;">მხარდაჭერა წერს...</span>
+                    <span style="margin-left: 6px; font-size: 12px; color: #999;">✍️ მხარდაჭერა წერს...</span>
                 </div>
             </div>
 
             <!-- User Identify Form -->
             <div class="user-identify-form" id="identifyForm">
                 <div class="form-row">
-                    <input type="text" id="userName" placeholder="სახელი *" required>
-                    <input type="tel" id="userPhone" placeholder="ტელეფონი *" required>
+                    <input type="text" id="userName" placeholder="👤 სახელი *" required>
+                    <input type="tel" id="userPhone" placeholder="📞 ტელეფონი *" required>
                 </div>
-                <input type="email" id="userEmail" placeholder="ელ. ფოსტა" style="width:100%;padding:10px 14px;border:1px solid #e5e5e5;border-radius:12px;font-size:14px;margin-top:10px;">
+                <input type="email" id="userEmail" placeholder="✉️ ელ. ფოსტა" style="width:100%;padding:10px 14px;border:1px solid #e5e5e5;border-radius:12px;font-size:14px;margin-top:10px;">
                 <button class="btn-start" onclick="startChat()">
-                    <i class="fas fa-comment"></i> ჩატის დაწყება
+                    <i class="fas fa-comment"></i> 💬 ჩატის დაწყება
                 </button>
             </div>
 
@@ -609,19 +613,19 @@
                 <div id="voiceRecordingIndicator" class="voice-recording-indicator" style="display: none;">
                     <span class="recording-dot"></span>
                     <span class="recording-timer" id="recordTimer">0:00</span>
-                    <span style="color:#666;font-size:13px;">ჩაწერა...</span>
+                    <span style="color:#666;font-size:13px;">🎤 ჩაწერა...</span>
                     <button class="recording-cancel" onclick="cancelVoiceRecording()">✕</button>
                 </div>
 
                 <div id="filePreviewContainer" class="file-preview"></div>
 
                 <div class="chat-input-row">
-                    <textarea id="messageInput" placeholder="ჩაწერეთ შეტყობინება..." rows="1"></textarea>
+                    <textarea id="messageInput" placeholder="📝 ჩაწერეთ შეტყობინება..." rows="1"></textarea>
                     <div class="chat-tools">
-                        <button class="tool-btn" onclick="document.getElementById('fileInput').click()" title="ფაილის მიმაგრება">
+                        <button class="tool-btn" onclick="document.getElementById('fileInput').click()" title="📎 ფაილის მიმაგრება">
                             <i class="fas fa-paperclip"></i>
                         </button>
-                        <button class="tool-btn" id="voiceBtn" onclick="toggleVoiceRecording()" title="ხმოვანი მესიჯი">
+                        <button class="tool-btn" id="voiceBtn" onclick="toggleVoiceRecording()" title="🎤 ხმოვანი მესიჯი">
                             <i class="fas fa-microphone"></i>
                         </button>
                     </div>
@@ -654,7 +658,7 @@ let selectedFiles = [];
 let messageIdCache = new Set();
 let isUserPollingActive = false;
 
-// Check if user is already logged in or has session
+// ========== DOM CONTENT LOADED ==========
 document.addEventListener('DOMContentLoaded', function() {
     {% if current_user.is_authenticated %}
         userName = '{{ current_user.name }}';
@@ -775,7 +779,7 @@ async function loadMessages() {
         if (!data.messages || data.messages.length === 0) {
             container.innerHTML = `
                 <div style="text-align:center;padding:20px;color:#999;">
-                    <p>დაიწყეთ საუბარი. ჩვენი გუნდი დაგეხმარებათ!</p>
+                    <p>💬 დაიწყეთ საუბარი. ჩვენი გუნდი დაგეხმარებათ!</p>
                 </div>
             `;
             return;
@@ -799,11 +803,9 @@ async function loadMessages() {
 }
 
 // ========== APPEND MESSAGE ==========
-// ========== APPEND MESSAGE ==========
 function appendMessage(msg, isUser) {
     const container = document.getElementById('conversationMessages');
 
-    // ✅ Check if message already exists
     if (messageIdCache.has(msg.id)) return;
     messageIdCache.add(msg.id);
 
@@ -811,7 +813,7 @@ function appendMessage(msg, isUser) {
     bubble.className = `message-bubble ${isUser ? 'user' : 'admin'}`;
 
     const timeStr = formatDate(msg.created_at);
-    const senderName = isUser ? 'თქვენ' : 'მხარდაჭერა';
+    const senderName = isUser ? '👤 თქვენ' : '🛡️ მხარდაჭერა';
 
     let content = `
         <span class="msg-sender">${senderName}</span>
@@ -842,12 +844,9 @@ function appendMessage(msg, isUser) {
 
     bubble.innerHTML = content;
     container.appendChild(bubble);
-    
-    // ✅ Scroll to bottom after adding message
     scrollToBottom();
 }
 
-// ========== SEND MESSAGE ==========
 // ========== SEND MESSAGE ==========
 async function sendMessage() {
     const input = document.getElementById('messageInput');
@@ -904,7 +903,7 @@ async function sendMessage() {
             document.getElementById('voiceRecordingIndicator').style.display = 'none';
             document.getElementById('voiceBtn').classList.remove('recording');
 
-            // ✅ ვამატებთ მესიჯს პირდაპირ!
+            // Add message immediately
             const newMsg = {
                 id: data.message_id,
                 message: message,
@@ -935,6 +934,7 @@ async function sendMessage() {
         input.focus();
     }
 }
+
 // ========== VOICE RECORDING ==========
 async function toggleVoiceRecording() {
     if (isRecording) {
@@ -1002,8 +1002,7 @@ function cancelVoiceRecording() {
     document.getElementById('voiceBtn').classList.remove('recording');
 }
 
-// ========== USER POLLING - ახალი მესიჯების შემოწმება ==========
-// ========== USER POLLING - ახალი მესიჯების შემოწმება ==========
+// ========== USER POLLING ==========
 function startUserPolling() {
     if (isUserPollingActive) return;
     isUserPollingActive = true;
@@ -1018,19 +1017,17 @@ function startUserPolling() {
         if (!isIdentified) return;
 
         try {
-            // ✅ ადმინის მესიჯების შემოწმება (is_from_user == false)
             const response = await fetch(`/api/chat/check-new?user_id=${userId || ''}&last_id=${lastId}`);
             const data = await response.json();
 
-            console.log("🔄 Polling check:", data.messages.length, "new messages");
+            console.log("🔄 Polling check:", data.messages ? data.messages.length : 0, "new messages");
 
             if (data.messages && data.messages.length > 0) {
                 const newMessages = data.messages.filter(msg => !messageIdCache.has(msg.id));
 
                 if (newMessages.length > 0) {
-                    console.log("🟢 Adding", newMessages.length, "new messages");
+                    console.log("🟢 Adding", newMessages.length, "new admin messages");
                     newMessages.forEach(msg => {
-                        // ✅ false = admin message (right side)
                         appendMessage(msg, false);
                     });
 
@@ -1046,8 +1043,9 @@ function startUserPolling() {
         } catch (error) {
             console.error('User polling error:', error);
         }
-    }, 3000);  // 3 წამში ერთხელ
+    }, 3000);
 }
+
 // ========== UTILITIES ==========
 function formatDate(isoString) {
     if (!isoString) return '';
