@@ -321,6 +321,10 @@ def set_main_image(image_id):
 # CHAT API - USER SIDE (UPDATED)
 # ============================================================================
 
+# ============================================================================
+# CHAT API - USER SIDE (FIXED)
+# ============================================================================
+
 @app.route('/api/chat/send', methods=['POST'])
 def chat_send():
     """მომხმარებლის მიერ შეტყობინების გაგზავნა"""
@@ -340,29 +344,28 @@ def chat_send():
 
         user = None
         
-        # ჯერ ვცადოთ ტელეფონით მოძებნა
-        if user_phone:
-            user = User.query.filter_by(phone=user_phone).first()
+        # 1. ვცადოთ ტელეფონით მოძებნა (მთავარი იდენტიფიკატორი)
+        user = User.query.filter_by(phone=user_phone).first()
         
-        # თუ ვერ ვიპოვეთ, ვცადოთ email-ით
+        # 2. თუ ვერ ვიპოვეთ, ვცადოთ email-ით
         if not user and user_email:
             user = User.query.filter_by(email=user_email).first()
         
-        # თუ მაინც ვერ ვიპოვეთ, ვქმნით ახალ მომხმარებელს
+        # 3. თუ მაინც ვერ ვიპოვეთ, ვქმნით ახალ მომხმარებელს
         if not user:
-            # ვამოწმებთ არის თუ არა ეს ტელეფონი უკვე გამოყენებული
+            # ვამოწმებთ არის თუ არა ეს ტელეფონი სხვა მომხმარებელთან
             existing = User.query.filter_by(phone=user_phone).first()
             if existing:
                 user = existing
             else:
                 # ვქმნით უნიკალურ email-ს თუ მომხმარებელმა არ მიუთითა
                 if not user_email:
-                    user_email = f"user_{datetime.now().strftime('%Y%m%d%H%M%S')}_{user_phone.replace('+', '')}@temp.com"
+                    user_email = f"user_{datetime.now().strftime('%Y%m%d%H%M%S')}_{user_phone.replace('+', '').replace(' ', '')}@temp.com"
                 else:
                     # თუ email უკვე არსებობს, ვამატებთ ტელეფონის ნომერს
                     existing_email = User.query.filter_by(email=user_email).first()
                     if existing_email:
-                        user_email = f"{user_email.split('@')[0]}_{user_phone.replace('+', '')}@{user_email.split('@')[1]}"
+                        user_email = f"{user_email.split('@')[0]}_{user_phone.replace('+', '').replace(' ', '')}@{user_email.split('@')[1]}"
                 
                 user = User(
                     name=user_name,
@@ -454,7 +457,6 @@ def chat_send():
         db.session.commit()
         print(f"✅ Message saved: {chat_message.id} for user {user.id}")
 
-        # ვაბრუნებთ user_id-ს რომ კლიენტმა შემდგომ გამოიყენოს
         return jsonify({
             'success': True,
             'message_id': chat_message.id,
@@ -467,6 +469,106 @@ def chat_send():
         traceback.print_exc()
         db.session.rollback()
         return jsonify({'success': False, 'error': str(e)}), 500
+
+
+@app.route('/api/chat/messages')
+def chat_get_messages():
+    try:
+        user_id = request.args.get('user_id', type=int)
+        
+        # თუ მომხმარებელი ავტორიზებულია, ვიყენებთ მის ID-ს
+        if current_user.is_authenticated:
+            user_id = current_user.id
+        # თუ არა, ვცდილობთ ტელეფონის ნომრით მოძებნას
+        elif not user_id:
+            phone = request.args.get('phone', '')
+            if phone:
+                user = User.query.filter_by(phone=phone).first()
+                if user:
+                    user_id = user.id
+
+        if not user_id:
+            return jsonify({'messages': [], 'success': True})
+
+        messages = ChatMessage.query.filter_by(user_id=user_id).order_by(ChatMessage.created_at.asc()).all()
+
+        # წავიკითხოთ ადმინის მიერ გაგზავნილი მესიჯები
+        for msg in messages:
+            if not msg.is_from_user and not msg.is_read:
+                msg.is_read = True
+        db.session.commit()
+
+        conversation = ChatConversation.query.filter_by(user_id=user_id, is_active=True).first()
+        if conversation:
+            conversation.unread_count = 0
+            db.session.commit()
+
+        result = []
+        for msg in messages:
+            result.append({
+                'id': msg.id,
+                'message': msg.message,
+                'is_from_user': msg.is_from_user,
+                'is_voice': msg.is_voice,
+                'voice_path': msg.voice_path,
+                'voice_duration': msg.voice_duration,
+                'file_path': msg.file_path,
+                'file_name': msg.file_name,
+                'created_at': msg.created_at.isoformat()
+            })
+
+        return jsonify({'messages': result, 'success': True})
+
+    except Exception as e:
+        print(f"Error getting messages: {e}")
+        return jsonify({'messages': [], 'success': False}), 500
+
+
+@app.route('/api/chat/check-new')
+def chat_check_new():
+    try:
+        user_id = request.args.get('user_id', type=int)
+        last_id = request.args.get('last_id', type=int, default=0)
+
+        # თუ მომხმარებელი ავტორიზებულია
+        if current_user.is_authenticated:
+            user_id = current_user.id
+        elif not user_id:
+            # ვცდილობთ ტელეფონის ნომრით მოძებნას
+            phone = request.args.get('phone', '')
+            if phone:
+                user = User.query.filter_by(phone=phone).first()
+                if user:
+                    user_id = user.id
+
+        if not user_id:
+            return jsonify({'messages': []})
+
+        messages = ChatMessage.query.filter(
+            ChatMessage.user_id == user_id,
+            ChatMessage.id > last_id,
+            ChatMessage.is_from_user == False
+        ).order_by(ChatMessage.created_at.asc()).all()
+
+        result = []
+        for msg in messages:
+            result.append({
+                'id': msg.id,
+                'message': msg.message,
+                'is_from_user': msg.is_from_user,
+                'is_voice': msg.is_voice,
+                'voice_path': msg.voice_path,
+                'voice_duration': msg.voice_duration,
+                'file_path': msg.file_path,
+                'file_name': msg.file_name,
+                'created_at': msg.created_at.isoformat()
+            })
+
+        return jsonify({'messages': result, 'success': True})
+
+    except Exception as e:
+        print(f"Error checking new messages: {e}")
+        return jsonify({'messages': [], 'success': False}), 500
 
 @app.route('/api/chat/messages')
 def chat_get_messages():
