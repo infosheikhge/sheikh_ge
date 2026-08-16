@@ -856,8 +856,7 @@ async function loadMessages() {
         }
 
         data.messages.forEach(msg => {
-            messageIdCache.add(msg.id);
-            appendMessage(msg, msg.is_from_user);
+    appendMessage(msg, msg.is_from_user);
         });
 
         scrollToBottom();
