@@ -1128,12 +1128,14 @@ async function loadUserMessages(userId) {
             return;
         }
 
-        data.messages.forEach(msg => {
-            messageIdCache.add(msg.id);
-            const isAdmin = !msg.is_from_user;
-            const senderName = isAdmin ? '🛡️ ადმინისტრატორი' : (data.user_name || '👤 მომხმარებელი');
-            appendMessageToContainer(msg, isAdmin, senderName);
-        });
+      data.messages.forEach(msg => {
+    const isAdmin = !msg.is_from_user;
+    const senderName = isAdmin
+        ? '🛡️ ადმინისტრატორი'
+        : (data.user_name || '👤 მომხმარებელი');
+
+    appendMessageToContainer(msg, isAdmin, senderName);
+});
 
         if (data.messages.length > 0) {
             lastMessageId = data.messages[data.messages.length - 1].id;
