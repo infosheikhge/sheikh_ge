@@ -779,6 +779,117 @@ body {
     color: white;
 }
 
+/* ===== SHARE BUTTONS (in edit form) ===== */
+.share-section {
+    margin-top: 5px;
+    padding-top: 15px;
+    border-top: 1px solid rgba(212,175,55,0.12);
+}
+
+.share-label {
+    font-size: 13px;
+    color: var(--text-light);
+    margin-bottom: 10px;
+    display: block;
+    font-weight: 500;
+}
+
+.share-buttons {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.share-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 14px;
+    border-radius: 30px;
+    border: none;
+    cursor: pointer;
+    font-size: 12px;
+    font-weight: 500;
+    transition: var(--transition);
+    text-decoration: none;
+    color: white;
+}
+
+.share-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+}
+
+.share-btn.facebook {
+    background: #1877F2;
+}
+.share-btn.messenger {
+    background: #00B2FF;
+}
+.share-btn.twitter {
+    background: #000000;
+}
+.share-btn.whatsapp {
+    background: #25D366;
+}
+.share-btn.telegram {
+    background: #0088CC;
+}
+.share-btn.copy {
+    background: var(--text-light);
+}
+
+.share-btn i {
+    font-size: 14px;
+}
+
+.share-btn .share-label-text {
+    font-size: 11px;
+}
+
+@media (max-width: 480px) {
+    .share-btn {
+        padding: 5px 10px;
+        font-size: 11px;
+    }
+    .share-btn .share-label-text {
+        display: none;
+    }
+    .share-btn i {
+        font-size: 16px;
+    }
+}
+
+/* Toast Message */
+.toast-message {
+    position: fixed;
+    bottom: 30px;
+    left: 50%;
+    transform: translateX(-50%) translateY(100px);
+    background: #1a1a1a;
+    color: white;
+    padding: 12px 24px;
+    border-radius: 40px;
+    font-size: 14px;
+    opacity: 0;
+    transition: all 0.4s ease;
+    z-index: 9999;
+    pointer-events: none;
+}
+
+.toast-message.show {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+}
+
+.toast-message.success {
+    background: #28a745;
+}
+
+.toast-message.error {
+    background: #dc3545;
+}
+
 @media (max-width: 480px) {
     .edit-btn, .delete-btn {
         padding: 4px 10px;
@@ -1137,6 +1248,40 @@ body {
                         </button>
                     </div>
 
+                    <!-- ===== SHARE SECTION ===== -->
+                    <div class="share-section">
+                        <span class="share-label">
+                            <i class="fas fa-share-alt" style="color: var(--gold);"></i>
+                            პროდუქტის გაზიარება
+                        </span>
+                        <div class="share-buttons">
+                            <button type="button" class="share-btn facebook" onclick="shareOnFacebook()">
+                                <i class="fab fa-facebook-f"></i>
+                                <span class="share-label-text">Facebook</span>
+                            </button>
+                            <button type="button" class="share-btn messenger" onclick="shareOnMessenger()">
+                                <i class="fab fa-facebook-messenger"></i>
+                                <span class="share-label-text">Messenger</span>
+                            </button>
+                            <button type="button" class="share-btn twitter" onclick="shareOnTwitter()">
+                                <i class="fab fa-twitter"></i>
+                                <span class="share-label-text">Twitter</span>
+                            </button>
+                            <button type="button" class="share-btn whatsapp" onclick="shareOnWhatsApp()">
+                                <i class="fab fa-whatsapp"></i>
+                                <span class="share-label-text">WhatsApp</span>
+                            </button>
+                            <button type="button" class="share-btn telegram" onclick="shareOnTelegram()">
+                                <i class="fab fa-telegram-plane"></i>
+                                <span class="share-label-text">Telegram</span>
+                            </button>
+                            <button type="button" class="share-btn copy" onclick="copyLink()">
+                                <i class="fas fa-link"></i>
+                                <span class="share-label-text">ლინკი</span>
+                            </button>
+                        </div>
+                    </div>
+
                     <div class="form-actions">
                         <button type="submit" class="btn btn-gold">
                             <i class="fas fa-save"></i> პროდუქტის დამატება
@@ -1229,10 +1374,13 @@ body {
     </div>
 </div>
 
+<!-- Toast Message -->
+<div id="toastMessage" class="toast-message"></div>
+
 <script>
 let imageRowCount = 0;
 
-// Toggle Add Product Form
+// ========== TOGGLE ADD FORM ==========
 function toggleAddForm() {
     const form = document.getElementById('addProductForm');
     if (form.style.display === 'none') {
@@ -1245,7 +1393,7 @@ function toggleAddForm() {
     }
 }
 
-// Image Preview
+// ========== IMAGE PREVIEW ==========
 function previewImage(input, previewId) {
     const preview = document.getElementById(previewId);
     if (input.files && input.files[0]) {
@@ -1299,7 +1447,7 @@ function removeImageRow(btn) {
     row.remove();
 }
 
-// Search Products
+// ========== SEARCH PRODUCTS ==========
 function searchProducts() {
     const input = document.getElementById('searchInput');
     const filter = input.value.toLowerCase();
@@ -1320,7 +1468,7 @@ function searchProducts() {
     }
 }
 
-// Delete Modal
+// ========== DELETE MODAL ==========
 function showDeleteModal(productId, productName) {
     const modal = document.getElementById('deleteModal');
     const message = document.getElementById('deleteMessage');
@@ -1351,5 +1499,102 @@ document.addEventListener('keydown', function(e) {
         closeDeleteModal();
     }
 });
+
+// ========== SHARE FUNCTIONS ==========
+function getShareUrl() {
+    // ვიღებთ მიმდინარე პროდუქტის URL-ს ან საიტის მთავარ URL-ს
+    const currentUrl = window.location.href;
+    // თუ ჩვენ ვართ admin პროდუქტების გვერდზე, ვიყენებთ საიტის მთავარ URL-ს
+    if (currentUrl.includes('/admin')) {
+        return window.location.origin + '/';
+    }
+    return currentUrl;
+}
+
+function getShareTitle() {
+    const nameInput = document.getElementById('name');
+    if (nameInput && nameInput.value) {
+        return encodeURIComponent(nameInput.value + ' - Sheikh.ge');
+    }
+    return encodeURIComponent('Sheikh.ge - Luxury Store');
+}
+
+function shareOnFacebook() {
+    const url = encodeURIComponent(getShareUrl());
+    const shareUrl = `https://www.facebook.com/sharer/sharer.php?u=${url}`;
+    window.open(shareUrl, '_blank', 'width=600,height=400');
+}
+
+function shareOnMessenger() {
+    const url = encodeURIComponent(getShareUrl());
+    const shareUrl = `https://www.facebook.com/dialog/send?link=${url}&app_id=123456789&redirect_uri=${url}`;
+    window.open(shareUrl, '_blank', 'width=600,height=400');
+}
+
+function shareOnTwitter() {
+    const title = getShareTitle();
+    const url = encodeURIComponent(getShareUrl());
+    const shareUrl = `https://twitter.com/intent/tweet?text=${title}&url=${url}`;
+    window.open(shareUrl, '_blank', 'width=600,height=400');
+}
+
+function shareOnWhatsApp() {
+    const title = getShareTitle();
+    const url = encodeURIComponent(getShareUrl());
+    const shareUrl = `https://api.whatsapp.com/send?text=${title}%0A${url}`;
+    window.open(shareUrl, '_blank', 'width=600,height=400');
+}
+
+function shareOnTelegram() {
+    const title = getShareTitle();
+    const url = encodeURIComponent(getShareUrl());
+    const shareUrl = `https://t.me/share/url?url=${url}&text=${title}`;
+    window.open(shareUrl, '_blank', 'width=600,height=400');
+}
+
+function copyLink() {
+    const url = getShareUrl();
+    if (navigator.clipboard) {
+        navigator.clipboard.writeText(url).then(() => {
+            showToast('✅ ლინკი დაკოპირდა!', 'success');
+        }).catch(() => {
+            fallbackCopy(url);
+        });
+    } else {
+        fallbackCopy(url);
+    }
+}
+
+function fallbackCopy(text) {
+    const textarea = document.createElement('textarea');
+    textarea.value = text;
+    textarea.style.position = 'fixed';
+    textarea.style.opacity = '0';
+    document.body.appendChild(textarea);
+    textarea.select();
+    try {
+        document.execCommand('copy');
+        showToast('✅ ლინკი დაკოპირდა!', 'success');
+    } catch (err) {
+        showToast('❌ ლინკის კოპირება ვერ მოხერხდა', 'error');
+    }
+    document.body.removeChild(textarea);
+}
+
+// ========== TOAST MESSAGE ==========
+function showToast(message, type = '') {
+    const toast = document.getElementById('toastMessage');
+    toast.textContent = message;
+    toast.className = 'toast-message';
+    if (type) {
+        toast.classList.add(type);
+    }
+    toast.classList.add('show');
+    
+    clearTimeout(toast._timeout);
+    toast._timeout = setTimeout(() => {
+        toast.classList.remove('show');
+    }, 3000);
+}
 </script>
 {% endblock %}
