@@ -120,6 +120,7 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
+    flex-shrink: 0;
 }
 
 .chat-header-left {
@@ -172,6 +173,7 @@
     display: flex;
     flex-direction: column;
     gap: 8px;
+    min-height: 0;
 }
 
 .message-bubble {
@@ -180,6 +182,12 @@
     border-radius: 16px;
     font-size: 14px;
     line-height: 1.5;
+    animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
 }
 
 .message-bubble.user {
@@ -225,11 +233,16 @@
     align-items: center;
     gap: 10px;
     margin-top: 5px;
+    flex-wrap: wrap;
 }
 
 .voice-msg audio {
     max-width: 180px;
     height: 36px;
+}
+
+.voice-msg audio::-webkit-media-controls-panel {
+    background: rgba(255,255,255,0.9);
 }
 
 .file-msg {
@@ -294,6 +307,7 @@
     display: flex;
     flex-direction: column;
     gap: 10px;
+    flex-shrink: 0;
 }
 
 .chat-input-row {
@@ -359,6 +373,7 @@
     display: flex;
     align-items: center;
     justify-content: center;
+    flex-shrink: 0;
 }
 
 .tool-btn:hover {
@@ -438,6 +453,7 @@
     padding: 16px 24px;
     background: #f8f6f2;
     border-top: 1px solid rgba(212,175,55,0.1);
+    flex-shrink: 0;
 }
 
 .user-identify-form .form-row {
@@ -452,6 +468,7 @@
     border-radius: 12px;
     font-size: 14px;
     width: 100%;
+    box-sizing: border-box;
 }
 
 .user-identify-form input:focus {
@@ -485,6 +502,26 @@
 .identify-message i {
     color: var(--gold);
     font-size: 32px;
+    display: block;
+    margin-bottom: 10px;
+}
+
+/* Message container */
+.message-container {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.empty-messages {
+    text-align: center;
+    padding: 30px 20px;
+    color: #999;
+}
+
+.empty-messages i {
+    font-size: 36px;
+    color: var(--gold);
     display: block;
     margin-bottom: 10px;
 }
@@ -587,7 +624,7 @@
                     <i class="fas fa-comment-dots"></i>
                     <p>გთხოვთ შეავსოთ ქვემოთ მოცემული ფორმა<br>ჩატის დასაწყებად</p>
                 </div>
-                <div id="conversationMessages"></div>
+                <div id="conversationMessages" class="message-container"></div>
                 <div id="typingIndicator" class="typing-indicator" style="display: none;">
                     <span class="typing-dot"></span>
                     <span class="typing-dot"></span>
@@ -602,7 +639,7 @@
                     <input type="text" id="userName" placeholder="👤 სახელი *" required>
                     <input type="tel" id="userPhone" placeholder="📞 ტელეფონი *" required>
                 </div>
-                <input type="email" id="userEmail" placeholder="✉️ ელ. ფოსტა" style="width:100%;padding:10px 14px;border:1px solid #e5e5e5;border-radius:12px;font-size:14px;margin-top:10px;">
+                <input type="email" id="userEmail" placeholder="✉️ ელ. ფოსტა (არასავალდებულო)" style="width:100%;padding:10px 14px;border:1px solid #e5e5e5;border-radius:12px;font-size:14px;margin-top:10px;box-sizing:border-box;">
                 <button class="btn-start" onclick="startChat()">
                     <i class="fas fa-comment"></i> 💬 ჩატის დაწყება
                 </button>
@@ -660,37 +697,58 @@ let isUserPollingActive = false;
 
 // ========== DOM CONTENT LOADED ==========
 document.addEventListener('DOMContentLoaded', function() {
+    // ვცადოთ აღდგენა sessionStorage-დან
+    const savedUser = sessionStorage.getItem('chat_user_data');
+    if (savedUser) {
+        try {
+            const user = JSON.parse(savedUser);
+            if (user.timestamp && (new Date().getTime() - user.timestamp) < 86400000) {
+                userName = user.name;
+                userPhone = user.phone;
+                userEmail = user.email || '';
+                userId = user.user_id || null;
+                isIdentified = true;
+                
+                document.getElementById('userNameDisplay').textContent = userName;
+                document.getElementById('identifyForm').style.display = 'none';
+                document.getElementById('chatInputArea').style.display = 'block';
+                document.getElementById('identifyMessage').style.display = 'none';
+                
+                // ჩავტვირთოთ მესიჯები
+                loadMessages();
+                startUserPolling();
+            } else {
+                sessionStorage.removeItem('chat_user_data');
+            }
+        } catch(e) {
+            sessionStorage.removeItem('chat_user_data');
+        }
+    }
+    
     {% if current_user.is_authenticated %}
+        // თუ მომხმარებელი ავტორიზებულია
         userName = '{{ current_user.name }}';
         userPhone = '{{ current_user.phone }}';
         userEmail = '{{ current_user.email }}';
         userId = {{ current_user.id }};
         isIdentified = true;
+        
         document.getElementById('userNameDisplay').textContent = userName;
         document.getElementById('identifyForm').style.display = 'none';
         document.getElementById('chatInputArea').style.display = 'block';
         document.getElementById('identifyMessage').style.display = 'none';
+        
+        // შევინახოთ sessionStorage-ში
+        sessionStorage.setItem('chat_user_data', JSON.stringify({
+            name: userName,
+            phone: userPhone,
+            email: userEmail,
+            user_id: userId,
+            timestamp: new Date().getTime()
+        }));
+        
         loadMessages();
         startUserPolling();
-    {% else %}
-        const savedUser = sessionStorage.getItem('chat_user');
-        if (savedUser) {
-            try {
-                const user = JSON.parse(savedUser);
-                if (user.timestamp && (new Date().getTime() - user.timestamp) < 86400000) {
-                    userName = user.name;
-                    userPhone = user.phone;
-                    userEmail = user.email;
-                    isIdentified = true;
-                    document.getElementById('userNameDisplay').textContent = userName;
-                    document.getElementById('identifyForm').style.display = 'none';
-                    document.getElementById('chatInputArea').style.display = 'block';
-                    document.getElementById('identifyMessage').style.display = 'none';
-                    loadMessages();
-                    startUserPolling();
-                }
-            } catch(e) {}
-        }
     {% endif %}
 
     const input = document.getElementById('messageInput');
@@ -755,13 +813,16 @@ function startChat() {
     document.getElementById('chatInputArea').style.display = 'block';
     document.getElementById('identifyMessage').style.display = 'none';
 
-    sessionStorage.setItem('chat_user', JSON.stringify({
+    // შევინახოთ sessionStorage-ში
+    sessionStorage.setItem('chat_user_data', JSON.stringify({
         name: userName,
         phone: userPhone,
         email: userEmail,
+        user_id: null,
         timestamp: new Date().getTime()
     }));
 
+    // მესიჯების ჩატვირთვა
     loadMessages();
     startUserPolling();
 }
@@ -769,7 +830,15 @@ function startChat() {
 // ========== LOAD MESSAGES ==========
 async function loadMessages() {
     try {
-        const response = await fetch('/api/chat/messages');
+        // თუ userId არ გვაქვს, ვცადოთ ტელეფონის ნომრით
+        let url = '/api/chat/messages';
+        if (userId) {
+            url += `?user_id=${userId}`;
+        } else if (userPhone) {
+            url += `?phone=${encodeURIComponent(userPhone)}`;
+        }
+        
+        const response = await fetch(url);
         const data = await response.json();
 
         const container = document.getElementById('conversationMessages');
@@ -778,7 +847,8 @@ async function loadMessages() {
 
         if (!data.messages || data.messages.length === 0) {
             container.innerHTML = `
-                <div style="text-align:center;padding:20px;color:#999;">
+                <div class="empty-messages">
+                    <i class="fas fa-comment-dots"></i>
                     <p>💬 დაიწყეთ საუბარი. ჩვენი გუნდი დაგეხმარებათ!</p>
                 </div>
             `;
@@ -787,14 +857,33 @@ async function loadMessages() {
 
         data.messages.forEach(msg => {
             messageIdCache.add(msg.id);
-            const isUser = msg.is_from_user;
-            appendMessage(msg, isUser);
+            appendMessage(msg, msg.is_from_user);
         });
 
         scrollToBottom();
 
         if (data.messages.length > 0) {
             lastMessageId = data.messages[data.messages.length - 1].id;
+            
+            // თუ userId არ გვაქვს, ავიღოთ მესიჯებიდან
+            if (!userId && data.messages.length > 0) {
+                // მეორე request-ით მივიღოთ user_id
+                try {
+                    const userResponse = await fetch('/api/chat/messages?phone=' + encodeURIComponent(userPhone));
+                    const userData = await userResponse.json();
+                    if (userData.messages && userData.messages.length > 0) {
+                        // ვერ მივიღებთ user_id-ს პირდაპირ, მაგრამ შემდეგ გამოგვადგება
+                    }
+                } catch(e) {}
+            }
+        }
+
+        // განვაახლოთ sessionStorage
+        const saved = sessionStorage.getItem('chat_user_data');
+        if (saved) {
+            const user = JSON.parse(saved);
+            user.user_id = userId;
+            sessionStorage.setItem('chat_user_data', JSON.stringify(user));
         }
 
     } catch (error) {
@@ -805,6 +894,11 @@ async function loadMessages() {
 // ========== APPEND MESSAGE ==========
 function appendMessage(msg, isUser) {
     const container = document.getElementById('conversationMessages');
+    
+    const emptyMsg = container.querySelector('.empty-messages');
+    if (emptyMsg) {
+        emptyMsg.remove();
+    }
 
     if (messageIdCache.has(msg.id)) return;
     messageIdCache.add(msg.id);
@@ -865,7 +959,7 @@ async function sendMessage() {
         const formData = new FormData();
         formData.append('name', userName);
         formData.append('phone', userPhone);
-        formData.append('email', userEmail);
+        formData.append('email', userEmail || '');
         formData.append('message', message);
 
         selectedFiles.forEach(file => {
@@ -883,18 +977,26 @@ async function sendMessage() {
             formData.append('voice_duration', recordSeconds);
         }
 
-        console.log("🔵 Sending message:", message);
-        console.log("🔵 User ID:", userId);
-
         const response = await fetch('/api/chat/send', {
             method: 'POST',
             body: formData
         });
 
         const data = await response.json();
-        console.log("📥 Response:", data);
 
         if (data.success) {
+            // შევინახოთ userId
+            if (data.user_id) {
+                userId = data.user_id;
+                // განვაახლოთ sessionStorage
+                const saved = sessionStorage.getItem('chat_user_data');
+                if (saved) {
+                    const user = JSON.parse(saved);
+                    user.user_id = userId;
+                    sessionStorage.setItem('chat_user_data', JSON.stringify(user));
+                }
+            }
+
             input.value = '';
             input.style.height = 'auto';
             selectedFiles = [];
@@ -903,24 +1005,28 @@ async function sendMessage() {
             document.getElementById('voiceRecordingIndicator').style.display = 'none';
             document.getElementById('voiceBtn').classList.remove('recording');
 
-            // Add message immediately
-            const newMsg = {
-                id: data.message_id,
-                message: message,
-                is_from_user: true,
-                is_voice: false,
-                voice_path: null,
-                voice_duration: 0,
-                file_path: null,
-                file_name: null,
-                created_at: new Date().toISOString()
-            };
-            appendMessage(newMsg, true);
-            
-            if (data.message_id) {
-                lastMessageId = data.message_id;
+            // თუ მესიჯი იყო ტექსტური, დავამატოთ დაუყოვნებლივ
+            if (message) {
+                const newMsg = {
+                    id: data.message_id || Date.now(),
+                    message: message,
+                    is_from_user: true,
+                    is_voice: false,
+                    voice_path: null,
+                    voice_duration: 0,
+                    file_path: null,
+                    file_name: null,
+                    created_at: new Date().toISOString()
+                };
+                appendMessage(newMsg, true);
+                
+                if (data.message_id) {
+                    lastMessageId = data.message_id;
+                }
+            } else {
+                await loadMessages();
             }
-            
+
             scrollToBottom();
         } else {
             alert(data.error || 'შეცდომა გაგზავნისას');
@@ -1017,16 +1123,20 @@ function startUserPolling() {
         if (!isIdentified) return;
 
         try {
-            const response = await fetch(`/api/chat/check-new?user_id=${userId || ''}&last_id=${lastId}`);
+            let url = `/api/chat/check-new?last_id=${lastId}`;
+            if (userId) {
+                url += `&user_id=${userId}`;
+            } else if (userPhone) {
+                url += `&phone=${encodeURIComponent(userPhone)}`;
+            }
+            
+            const response = await fetch(url);
             const data = await response.json();
-
-            console.log("🔄 Polling check:", data.messages ? data.messages.length : 0, "new messages");
 
             if (data.messages && data.messages.length > 0) {
                 const newMessages = data.messages.filter(msg => !messageIdCache.has(msg.id));
 
                 if (newMessages.length > 0) {
-                    console.log("🟢 Adding", newMessages.length, "new admin messages");
                     newMessages.forEach(msg => {
                         appendMessage(msg, false);
                     });
@@ -1073,7 +1183,7 @@ function scrollToBottom() {
     }
 }
 
-// Cleanup
+// ========== CLEANUP ==========
 window.addEventListener('beforeunload', function() {
     if (pollingInterval) {
         clearInterval(pollingInterval);
