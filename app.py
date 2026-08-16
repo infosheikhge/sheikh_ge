@@ -317,6 +317,10 @@ def set_main_image(image_id):
 # CHAT API - USER SIDE
 # ============================================================================
 
+# ============================================================================
+# CHAT API - USER SIDE (UPDATED)
+# ============================================================================
+
 @app.route('/api/chat/send', methods=['POST'])
 def chat_send():
     """მომხმარებლის მიერ შეტყობინების გაგზავნა"""
@@ -331,33 +335,50 @@ def chat_send():
         if not message_text and not is_voice:
             return jsonify({'success': False, 'error': 'Message is required'}), 400
 
+        if not user_name or not user_phone:
+            return jsonify({'success': False, 'error': 'Name and phone are required'}), 400
+
         user = None
-        if current_user.is_authenticated:
-            user = current_user
-        else:
-            if user_email:
-                user = User.query.filter_by(email=user_email).first()
-            if not user and user_phone:
-                user = User.query.filter_by(phone=user_phone).first()
-
-            if not user and user_email:
-                try:
-                    user = User(
-                        name=user_name or 'Guest',
-                        email=user_email,
-                        phone=user_phone or '',
-                        password=generate_password_hash('temp_' + datetime.now().strftime('%Y%m%d%H%M%S'))
-                    )
-                    db.session.add(user)
-                    db.session.flush()
-                except Exception as e:
-                    print(f"Error creating user: {e}")
-                    if user_email:
-                        user = User.query.filter_by(email=user_email).first()
-
+        
+        # ჯერ ვცადოთ ტელეფონით მოძებნა
+        if user_phone:
+            user = User.query.filter_by(phone=user_phone).first()
+        
+        # თუ ვერ ვიპოვეთ, ვცადოთ email-ით
+        if not user and user_email:
+            user = User.query.filter_by(email=user_email).first()
+        
+        # თუ მაინც ვერ ვიპოვეთ, ვქმნით ახალ მომხმარებელს
         if not user:
-            return jsonify({'success': False, 'error': 'User not identified'}), 400
+            # ვამოწმებთ არის თუ არა ეს ტელეფონი უკვე გამოყენებული
+            existing = User.query.filter_by(phone=user_phone).first()
+            if existing:
+                user = existing
+            else:
+                # ვქმნით უნიკალურ email-ს თუ მომხმარებელმა არ მიუთითა
+                if not user_email:
+                    user_email = f"user_{datetime.now().strftime('%Y%m%d%H%M%S')}_{user_phone.replace('+', '')}@temp.com"
+                else:
+                    # თუ email უკვე არსებობს, ვამატებთ ტელეფონის ნომერს
+                    existing_email = User.query.filter_by(email=user_email).first()
+                    if existing_email:
+                        user_email = f"{user_email.split('@')[0]}_{user_phone.replace('+', '')}@{user_email.split('@')[1]}"
+                
+                user = User(
+                    name=user_name,
+                    email=user_email,
+                    phone=user_phone,
+                    password=generate_password_hash(f"temp_{datetime.now().strftime('%Y%m%d%H%M%S')}")
+                )
+                db.session.add(user)
+                db.session.flush()
+                print(f"✅ New user created: {user.id} - {user_name} ({user_phone})")
 
+        # თუ მომხმარებელი მაინც არ არსებობს, ვაბრუნებთ შეცდომას
+        if not user:
+            return jsonify({'success': False, 'error': 'Could not identify user'}), 400
+
+        # ვპოულობთ ან ვქმნით საუბარს
         conversation = ChatConversation.query.filter_by(user_id=user.id, is_active=True).first()
         if not conversation:
             admin = User.query.filter_by(is_admin=True).first()
@@ -367,7 +388,9 @@ def chat_send():
             )
             db.session.add(conversation)
             db.session.flush()
+            print(f"✅ New conversation created for user {user.id}")
 
+        # ხმოვანი შეტყობინების შენახვა
         voice_path = None
         if is_voice:
             voice_data = request.form.get('voice_data')
@@ -378,12 +401,15 @@ def chat_send():
                         timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
                         audio_filename = f"user_voice_{user.id}_{timestamp}.webm"
                         audio_path = os.path.join(app.config['UPLOAD_FOLDER'], 'chat_voice', audio_filename)
+                        os.makedirs(os.path.dirname(audio_path), exist_ok=True)
                         with open(audio_path, 'wb') as f:
                             f.write(audio_data)
                         voice_path = f'uploads/chat_voice/{audio_filename}'
+                        print(f"✅ Voice saved: {voice_path}")
                 except Exception as e:
-                    print(f"Error saving voice: {e}")
+                    print(f"❌ Error saving voice: {e}")
 
+        # ფაილის შენახვა
         file_path = None
         file_name = None
         if 'file' in request.files:
@@ -393,14 +419,21 @@ def chat_send():
                 timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
                 unique_filename = f"user_file_{user.id}_{timestamp}_{filename}"
                 save_path = os.path.join(app.config['UPLOAD_FOLDER'], 'chat_files', unique_filename)
+                os.makedirs(os.path.dirname(save_path), exist_ok=True)
                 file.save(save_path)
                 file_path = f'uploads/chat_files/{unique_filename}'
                 file_name = filename
+                print(f"✅ File saved: {file_path}")
+
+        # შეტყობინების შექმნა
+        display_text = message_text or (f'[ფაილი: {file_name}]' if file_path else '')
+        if is_voice and not message_text:
+            display_text = '[ხმოვანი შეტყობინება]'
 
         chat_message = ChatMessage(
             user_id=user.id,
             admin_id=conversation.admin_id,
-            message=message_text or (f'[ფაილი: {file_name}]' if file_path else ''),
+            message=display_text,
             is_from_user=True,
             is_read=False,
             is_voice=is_voice,
@@ -412,14 +445,16 @@ def chat_send():
         db.session.add(chat_message)
         db.session.flush()
 
-        display_message = message_text if message_text else (
-            '[ხმოვანი შეტყობინება]' if is_voice else ('[ფაილი]' if file_path else ''))
-        conversation.last_message = display_message
+        # საუბრის განახლება
+        conversation.last_message = display_text
         conversation.last_message_time = datetime.now()
         conversation.unread_count += 1
         conversation.updated_at = datetime.now()
+        
         db.session.commit()
+        print(f"✅ Message saved: {chat_message.id} for user {user.id}")
 
+        # ვაბრუნებთ user_id-ს რომ კლიენტმა შემდგომ გამოიყენოს
         return jsonify({
             'success': True,
             'message_id': chat_message.id,
@@ -427,10 +462,11 @@ def chat_send():
         })
 
     except Exception as e:
-        print(f"Error sending message: {e}")
+        print(f"❌ Error sending message: {e}")
+        import traceback
+        traceback.print_exc()
         db.session.rollback()
         return jsonify({'success': False, 'error': str(e)}), 500
-
 
 @app.route('/api/chat/messages')
 def chat_get_messages():
