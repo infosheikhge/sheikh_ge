@@ -70,13 +70,6 @@ login_manager = LoginManager(app)
 login_manager.login_view = 'login'
 login_manager.login_message = 'Please log in to access this page.'
 
-@app.route('/my-purchases')
-@login_required
-def my_purchases():
-    """მომხმარებლის მიერ შეძენილი პროდუქტების გვერდი"""
-    orders = Order.query.filter_by(user_id=current_user.id).order_by(Order.created_at.desc()).all()
-    return render_template('my_purchases.html', orders=orders)
-    
 @login_manager.user_loader
 def load_user(user_id):
     return User.query.get(int(user_id))
@@ -99,21 +92,6 @@ def nl2br_filter(text):
     return text.replace('\n', '<br>\n')
 
 
-def format_message_time(dt):
-    if not dt:
-        return ''
-    now = datetime.now()
-    diff = now - dt
-    if diff.days == 0:
-        return dt.strftime('%H:%M')
-    elif diff.days == 1:
-        return 'გუშინ'
-    elif diff.days < 7:
-        return dt.strftime('%A')
-    else:
-        return dt.strftime('%d.%m.%Y')
-
-
 @app.template_filter('image_url')
 def image_url_filter(image):
     if not image:
@@ -134,6 +112,14 @@ def index():
     unread_messages_count = Message.query.filter_by(status='unread').count()
     return render_template('index.html', products=products, categories=categories,
                            unread_messages_count=unread_messages_count)
+
+
+@app.route('/my-purchases')
+@login_required
+def my_purchases():
+    """მომხმარებლის მიერ შეძენილი პროდუქტების გვერდი"""
+    orders = Order.query.filter_by(user_id=current_user.id).order_by(Order.created_at.desc()).all()
+    return render_template('my_purchases.html', orders=orders)
 
 
 @app.route('/shop')
@@ -222,7 +208,7 @@ def delete_from_cloudinary(public_id):
 
 
 # ============================================================================
-# Product Image Management Routes (UPDATED - Cloudinary)
+# Product Image Management Routes
 # ============================================================================
 
 @app.route('/admin/products/<int:product_id>/images')
@@ -317,14 +303,6 @@ def set_main_image(image_id):
 # CHAT API - USER SIDE
 # ============================================================================
 
-# ============================================================================
-# CHAT API - USER SIDE (UPDATED)
-# ============================================================================
-
-# ============================================================================
-# CHAT API - USER SIDE (FIXED)
-# ============================================================================
-
 @app.route('/api/chat/send', methods=['POST'])
 def chat_send():
     """მომხმარებლის მიერ შეტყობინების გაგზავნა"""
@@ -377,7 +355,6 @@ def chat_send():
                 db.session.flush()
                 print(f"✅ New user created: {user.id} - {user_name} ({user_phone})")
 
-        # თუ მომხმარებელი მაინც არ არსებობს, ვაბრუნებთ შეცდომას
         if not user:
             return jsonify({'success': False, 'error': 'Could not identify user'}), 400
 
@@ -476,10 +453,8 @@ def chat_get_messages():
     try:
         user_id = request.args.get('user_id', type=int)
         
-        # თუ მომხმარებელი ავტორიზებულია, ვიყენებთ მის ID-ს
         if current_user.is_authenticated:
             user_id = current_user.id
-        # თუ არა, ვცდილობთ ტელეფონის ნომრით მოძებნას
         elif not user_id:
             phone = request.args.get('phone', '')
             if phone:
@@ -530,11 +505,9 @@ def chat_check_new():
         user_id = request.args.get('user_id', type=int)
         last_id = request.args.get('last_id', type=int, default=0)
 
-        # თუ მომხმარებელი ავტორიზებულია
         if current_user.is_authenticated:
             user_id = current_user.id
         elif not user_id:
-            # ვცდილობთ ტელეფონის ნომრით მოძებნას
             phone = request.args.get('phone', '')
             if phone:
                 user = User.query.filter_by(phone=phone).first()
@@ -570,89 +543,6 @@ def chat_check_new():
         print(f"Error checking new messages: {e}")
         return jsonify({'messages': [], 'success': False}), 500
 
-@app.route('/api/chat/messages')
-def chat_get_messages():
-    try:
-        user_id = request.args.get('user_id', type=int)
-        if not user_id and current_user.is_authenticated:
-            user_id = current_user.id
-
-        if not user_id:
-            return jsonify({'messages': [], 'success': True})
-
-        messages = ChatMessage.query.filter_by(user_id=user_id).order_by(ChatMessage.created_at.asc()).all()
-
-        for msg in messages:
-            if not msg.is_from_user and not msg.is_read:
-                msg.is_read = True
-        db.session.commit()
-
-        conversation = ChatConversation.query.filter_by(user_id=user_id, is_active=True).first()
-        if conversation:
-            conversation.unread_count = 0
-            db.session.commit()
-
-        result = []
-        for msg in messages:
-            result.append({
-                'id': msg.id,
-                'message': msg.message,
-                'is_from_user': msg.is_from_user,
-                'is_voice': msg.is_voice,
-                'voice_path': msg.voice_path,
-                'voice_duration': msg.voice_duration,
-                'file_path': msg.file_path,
-                'file_name': msg.file_name,
-                'created_at': msg.created_at.isoformat()
-            })
-
-        return jsonify({'messages': result, 'success': True})
-
-    except Exception as e:
-        print(f"Error getting messages: {e}")
-        return jsonify({'messages': [], 'success': False}), 500
-
-
-@app.route('/api/chat/check-new')
-def chat_check_new():
-    try:
-        user_id = request.args.get('user_id', type=int)
-        last_id = request.args.get('last_id', type=int, default=0)
-
-        if not user_id:
-            user_id = current_user.id if current_user.is_authenticated else None
-
-        if not user_id:
-            return jsonify({'messages': []})
-
-        messages = ChatMessage.query.filter(
-            ChatMessage.user_id == user_id,
-            ChatMessage.id > last_id,
-            ChatMessage.is_from_user == False
-        ).order_by(ChatMessage.created_at.asc()).all()
-
-        print(f"🔍 Found {len(messages)} new admin messages for user {user_id}")
-
-        result = []
-        for msg in messages:
-            result.append({
-                'id': msg.id,
-                'message': msg.message,
-                'is_from_user': msg.is_from_user,
-                'is_voice': msg.is_voice,
-                'voice_path': msg.voice_path,
-                'voice_duration': msg.voice_duration,
-                'file_path': msg.file_path,
-                'file_name': msg.file_name,
-                'created_at': msg.created_at.isoformat()
-            })
-
-        return jsonify({'messages': result, 'success': True})
-
-    except Exception as e:
-        print(f"Error checking new messages: {e}")
-        return jsonify({'messages': [], 'success': False}), 500
-
 
 # ============================================================================
 # CHAT API - ADMIN SIDE
@@ -661,6 +551,7 @@ def chat_check_new():
 @app.route('/admin/api/chat/conversations')
 @admin_required
 def admin_chat_conversations():
+    """ადმინისთვის ყველა აქტიური საუბრის სია"""
     try:
         conversations = ChatConversation.query.filter_by(is_active=True).order_by(
             ChatConversation.updated_at.desc()
@@ -672,10 +563,6 @@ def admin_chat_conversations():
             if not user:
                 continue
 
-            last_msg = ChatMessage.query.filter_by(user_id=conv.user_id).order_by(
-                ChatMessage.created_at.desc()
-            ).first()
-
             unread_count = ChatMessage.query.filter_by(
                 user_id=conv.user_id,
                 is_from_user=True,
@@ -686,10 +573,10 @@ def admin_chat_conversations():
                 'id': conv.id,
                 'user_id': user.id,
                 'user_name': user.name,
-                'user_email': user.email,
+                'user_email': user.email or '',
                 'user_phone': user.phone,
-                'last_message': last_msg.message if last_msg else '',
-                'last_message_time': last_msg.created_at.isoformat() if last_msg else None,
+                'last_message': conv.last_message or '',
+                'last_message_time': conv.last_message_time.isoformat() if conv.last_message_time else None,
                 'unread_count': unread_count,
                 'updated_at': conv.updated_at.isoformat()
             })
@@ -704,11 +591,13 @@ def admin_chat_conversations():
 @app.route('/admin/api/chat/messages/<int:user_id>')
 @admin_required
 def admin_chat_messages(user_id):
+    """ადმინი ხედავს კონკრეტული მომხმარებლის მესიჯებს"""
     try:
         messages = ChatMessage.query.filter_by(user_id=user_id).order_by(
             ChatMessage.created_at.asc()
         ).all()
 
+        # წავიკითხოთ მომხმარებლის მიერ გაგზავნილი მესიჯები
         for msg in messages:
             if msg.is_from_user and not msg.is_read:
                 msg.is_read = True
@@ -751,6 +640,7 @@ def admin_chat_messages(user_id):
 @app.route('/admin/api/chat/send', methods=['POST'])
 @admin_required
 def admin_chat_send():
+    """ადმინი აგზავნის მესიჯს მომხმარებელთან"""
     try:
         user_id = request.form.get('user_id', type=int)
         message_text = request.form.get('message', '').strip()
@@ -767,7 +657,7 @@ def admin_chat_send():
         if not user:
             return jsonify({'success': False, 'error': 'User not found'}), 404
 
-        # Get or create conversation
+        # ვპოულობთ ან ვქმნით საუბარს
         conversation = ChatConversation.query.filter_by(user_id=user_id, is_active=True).first()
         if not conversation:
             conversation = ChatConversation(
@@ -777,6 +667,7 @@ def admin_chat_send():
             db.session.add(conversation)
             db.session.flush()
 
+        # ხმოვანი შეტყობინების შენახვა
         voice_path = None
         if is_voice:
             voice_data = request.form.get('voice_data')
@@ -787,34 +678,34 @@ def admin_chat_send():
                         timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
                         audio_filename = f"admin_voice_{user_id}_{timestamp}.webm"
                         audio_path = os.path.join(app.config['UPLOAD_FOLDER'], 'chat_voice', audio_filename)
+                        os.makedirs(os.path.dirname(audio_path), exist_ok=True)
                         with open(audio_path, 'wb') as f:
                             f.write(audio_data)
                         voice_path = f'uploads/chat_voice/{audio_filename}'
                 except Exception as e:
                     print(f"Error saving voice: {e}")
 
-        # ✅ CREATE MESSAGE
+        # შეტყობინების შექმნა
         chat_message = ChatMessage(
             user_id=user_id,
             admin_id=current_user.id,
-            message=message_text,
-            is_from_user=False,  # ← მნიშვნელოვანი! ადმინის მესიჯი
+            message=message_text if message_text else '[ხმოვანი შეტყობინება]',
+            is_from_user=False,
             is_read=False,
             is_voice=is_voice,
             voice_path=voice_path,
             voice_duration=voice_duration
         )
         db.session.add(chat_message)
-        db.session.flush()  # ← ID-ს მისაღებად
+        db.session.flush()
 
-        # Update conversation
+        # საუბრის განახლება
         conversation.last_message = message_text if message_text else '[ხმოვანი შეტყობინება]'
         conversation.last_message_time = datetime.now()
         conversation.unread_count += 1
         conversation.updated_at = datetime.now()
         db.session.commit()
 
-        # ✅ RETURN THE SAVED MESSAGE
         return jsonify({
             'success': True,
             'message_id': chat_message.id,
@@ -838,6 +729,7 @@ def admin_chat_send():
 @app.route('/admin/api/chat/check-new/<int:user_id>')
 @admin_required
 def admin_chat_check_new(user_id):
+    """ადმინი ამოწმებს ახალ მესიჯებს კონკრეტული მომხმარებლისგან"""
     try:
         last_id = request.args.get('last_id', type=int, default=0)
 
@@ -871,6 +763,7 @@ def admin_chat_check_new(user_id):
 @app.route('/admin/api/chat/mark-read/<int:user_id>', methods=['POST'])
 @admin_required
 def admin_chat_mark_read(user_id):
+    """ადმინი აღნიშნავს მომხმარებლის მესიჯებს წაკითხულად"""
     try:
         messages = ChatMessage.query.filter_by(
             user_id=user_id,
@@ -896,6 +789,7 @@ def admin_chat_mark_read(user_id):
 @app.route('/admin/api/chat/delete/<int:user_id>', methods=['POST'])
 @admin_required
 def admin_chat_delete(user_id):
+    """ადმინი შლის მთელ საუბარს"""
     try:
         ChatMessage.query.filter_by(user_id=user_id).delete()
         ChatConversation.query.filter_by(user_id=user_id).delete()
@@ -911,6 +805,7 @@ def admin_chat_delete(user_id):
 @app.route('/admin/api/search-users')
 @admin_required
 def admin_search_users():
+    """ადმინი ეძებს მომხმარებლებს სახელით, ტელეფონით ან მეილით"""
     try:
         search_term = request.args.get('q', '').strip()
         if not search_term or len(search_term) < 2:
@@ -925,6 +820,9 @@ def admin_search_users():
 
         result = []
         for user in users:
+            if user.is_admin:
+                continue  # არ ვაჩვენოთ ადმინები
+            
             conv = ChatConversation.query.filter_by(user_id=user.id, is_active=True).first()
             result.append({
                 'id': user.id,
@@ -995,7 +893,7 @@ def delete_order(order_id):
 
 
 # ============================================================================
-# PRODUCT ROUTES WITH CLOUDINARY (UPDATED)
+# PRODUCT ROUTES
 # ============================================================================
 
 @app.route('/admin/products')
@@ -1379,6 +1277,10 @@ def register():
         if User.query.filter_by(email=email).first():
             flash('Email already registered', 'error')
             return redirect(url_for('register'))
+        
+        if User.query.filter_by(phone=phone).first():
+            flash('Phone number already registered', 'error')
+            return redirect(url_for('register'))
 
         user = User(
             name=name,
@@ -1554,7 +1456,6 @@ def order_confirmation(order_id):
 # Run App
 # ============================================================================
 
-# ✅ Create tables on app startup (BEFORE running the app)
 with app.app_context():
     try:
         db.create_all()
