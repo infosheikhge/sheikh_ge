@@ -296,7 +296,7 @@
     margin-bottom: 15px;
 }
 
-/* Tabs Section - ახლა ინფორმაციის ნაწილია */
+/* Tabs Section */
 .tabs-luxury {
     margin-top: 30px;
 }
@@ -383,6 +383,110 @@
     color: var(--dark);
     width: 150px;
 }
+
+/* ============================================================ */
+/* ===== SHARE SECTION - აქ არის გაზიარების ღილაკები ===== */
+/* ============================================================ */
+.share-section {
+    margin-top: 30px;
+    padding-top: 25px;
+    border-top: 2px solid rgba(212,175,55,0.15);
+}
+
+.share-label {
+    font-size: 14px;
+    color: var(--text-light);
+    margin-bottom: 14px;
+    display: block;
+    font-weight: 500;
+}
+
+.share-label i {
+    color: var(--gold);
+    margin-right: 8px;
+}
+
+.share-buttons {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.share-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 22px;
+    border-radius: 40px;
+    border: none;
+    cursor: pointer;
+    font-size: 13px;
+    font-weight: 500;
+    transition: all 0.3s ease;
+    text-decoration: none;
+    color: white;
+}
+
+.share-btn:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 5px 20px rgba(0,0,0,0.15);
+}
+
+.share-btn:active {
+    transform: scale(0.95);
+}
+
+.share-btn.facebook {
+    background: #1877F2;
+}
+.share-btn.facebook:hover {
+    background: #1664D9;
+}
+
+.share-btn.messenger {
+    background: #00B2FF;
+}
+.share-btn.messenger:hover {
+    background: #0099E6;
+}
+
+.share-btn.twitter {
+    background: #000000;
+}
+.share-btn.twitter:hover {
+    background: #1a1a1a;
+}
+
+.share-btn.whatsapp {
+    background: #25D366;
+}
+.share-btn.whatsapp:hover {
+    background: #1DA851;
+}
+
+.share-btn.telegram {
+    background: #0088CC;
+}
+.share-btn.telegram:hover {
+    background: #0077B3;
+}
+
+.share-btn.copy {
+    background: #6c757d;
+}
+.share-btn.copy:hover {
+    background: #5a6268;
+}
+
+.share-btn i {
+    font-size: 18px;
+}
+
+.share-btn .share-label-text {
+    font-size: 12px;
+}
+
+/* ============================================================ */
 
 /* Success Modal */
 .luxury-modal {
@@ -507,6 +611,36 @@
     color: var(--text-light);
 }
 
+/* Toast Message */
+.toast-message {
+    position: fixed;
+    bottom: 30px;
+    left: 50%;
+    transform: translateX(-50%) translateY(100px);
+    background: #1a1a1a;
+    color: white;
+    padding: 12px 24px;
+    border-radius: 40px;
+    font-size: 14px;
+    opacity: 0;
+    transition: all 0.4s ease;
+    z-index: 9999;
+    pointer-events: none;
+}
+
+.toast-message.show {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+}
+
+.toast-message.success {
+    background: #28a745;
+}
+
+.toast-message.error {
+    background: #dc3545;
+}
+
 /* Responsive */
 @media (max-width: 768px) {
     .product-title-luxury {
@@ -533,6 +667,19 @@
     }
     .spec-table td:first-child {
         width: 110px;
+    }
+    .share-buttons {
+        gap: 8px;
+    }
+    .share-btn {
+        padding: 8px 14px;
+        font-size: 12px;
+    }
+    .share-btn .share-label-text {
+        display: none;
+    }
+    .share-btn i {
+        font-size: 20px;
     }
 }
 </style>
@@ -657,7 +804,7 @@
                 </div>
             </div>
 
-            <!-- TABS - აქ არის ინფორმაციის ქვეშ, იმავე სვეტში -->
+            <!-- TABS -->
             <div class="tabs-luxury">
                 <div class="tabs-header-luxury">
                     <button class="tab-btn-luxury active" onclick="switchTab('description')">აღწერა</button>
@@ -726,6 +873,53 @@
             </div>
             <!-- END TABS -->
 
+            <!-- ============================================================ -->
+            <!-- ===== SHARE SECTION - აქ არის გაზიარების ღილაკები ===== -->
+            <!-- ============================================================ -->
+            <div class="share-section">
+                <span class="share-label">
+                    <i class="fas fa-share-alt"></i>
+                    გააზიარეთ პროდუქტი
+                </span>
+                <div class="share-buttons">
+                    <!-- Facebook -->
+                    <button class="share-btn facebook" onclick="shareOnFacebook()">
+                        <i class="fab fa-facebook-f"></i>
+                        <span class="share-label-text">Facebook</span>
+                    </button>
+                    
+                    <!-- Messenger -->
+                    <button class="share-btn messenger" onclick="shareOnMessenger()">
+                        <i class="fab fa-facebook-messenger"></i>
+                        <span class="share-label-text">Messenger</span>
+                    </button>
+                    
+                    <!-- Twitter / X -->
+                    <button class="share-btn twitter" onclick="shareOnTwitter()">
+                        <i class="fab fa-twitter"></i>
+                        <span class="share-label-text">Twitter</span>
+                    </button>
+                    
+                    <!-- WhatsApp -->
+                    <button class="share-btn whatsapp" onclick="shareOnWhatsApp()">
+                        <i class="fab fa-whatsapp"></i>
+                        <span class="share-label-text">WhatsApp</span>
+                    </button>
+                    
+                    <!-- Telegram -->
+                    <button class="share-btn telegram" onclick="shareOnTelegram()">
+                        <i class="fab fa-telegram-plane"></i>
+                        <span class="share-label-text">Telegram</span>
+                    </button>
+                    
+                    <!-- Copy Link -->
+                    <button class="share-btn copy" onclick="copyLink()">
+                        <i class="fas fa-link"></i>
+                        <span class="share-label-text">ლინკი</span>
+                    </button>
+                </div>
+            </div>
+
         </div>
         <!-- END Product Info Section -->
     </div>
@@ -747,23 +941,25 @@
     </div>
 </div>
 
+<!-- Toast Message -->
+<div id="toastMessage" class="toast-message"></div>
+
 <script>
-// Image Gallery
+// ========== IMAGE GALLERY ==========
 function changeImage(thumbnail, imageUrl) {
     document.getElementById('mainImage').src = imageUrl;
-
     document.querySelectorAll('.thumbnail-luxury').forEach(thumb => {
         thumb.classList.remove('active');
     });
     thumbnail.classList.add('active');
 }
 
-// Zoom Function
+// ========== ZOOM ==========
 function toggleZoom(container) {
     container.classList.toggle('zoomed');
 }
 
-// Quantity Functions
+// ========== QUANTITY ==========
 function incrementQuantity() {
     const input = document.getElementById('quantity');
     let value = parseInt(input.value);
@@ -780,7 +976,7 @@ function decrementQuantity() {
     }
 }
 
-// Tab Switching
+// ========== TABS ==========
 function switchTab(tabName) {
     const tabs = ['description', 'details', 'shipping'];
     tabs.forEach(tab => {
@@ -796,7 +992,7 @@ function switchTab(tabName) {
     });
 }
 
-// Form Submission
+// ========== FORM SUBMISSION ==========
 const orderForm = document.getElementById('orderForm');
 if (orderForm) {
     orderForm.addEventListener('submit', async function(e) {
@@ -834,7 +1030,7 @@ if (orderForm) {
     });
 }
 
-// Modal Functions
+// ========== MODAL ==========
 function closeModal() {
     document.getElementById('successModal').style.display = 'none';
 }
@@ -844,6 +1040,96 @@ window.onclick = function(event) {
     if (event.target === modal) {
         modal.style.display = 'none';
     }
+}
+
+// ================================================================
+// ========== SHARE FUNCTIONS - გაზიარების ფუნქციები ==========
+// ================================================================
+
+function getShareData() {
+    const url = encodeURIComponent(window.location.href);
+    const title = encodeURIComponent("{{ product.name }} - Sheikh.ge");
+    // სურათის სრული URL
+    let image = "{% if product.image and product.image.startswith('http') %}{{ product.image }}{% else %}{{ url_for('static', filename=product.image, _external=True) }}{% endif %}";
+    if (!image || image === '') {
+        image = encodeURIComponent(window.location.origin + '/static/images/logo.png');
+    }
+    return { url, title, image };
+}
+
+function shareOnFacebook() {
+    const data = getShareData();
+    const shareUrl = `https://www.facebook.com/sharer/sharer.php?u=${data.url}&quote=${data.title}`;
+    window.open(shareUrl, '_blank', 'width=600,height=500');
+}
+
+function shareOnMessenger() {
+    const data = getShareData();
+    const shareUrl = `https://www.facebook.com/dialog/send?link=${data.url}&app_id=123456789&redirect_uri=${data.url}`;
+    window.open(shareUrl, '_blank', 'width=600,height=500');
+}
+
+function shareOnTwitter() {
+    const data = getShareData();
+    const shareUrl = `https://twitter.com/intent/tweet?text=${data.title}&url=${data.url}`;
+    window.open(shareUrl, '_blank', 'width=600,height=500');
+}
+
+function shareOnWhatsApp() {
+    const data = getShareData();
+    const shareUrl = `https://api.whatsapp.com/send?text=${data.title}%0A${data.url}`;
+    window.open(shareUrl, '_blank', 'width=600,height=500');
+}
+
+function shareOnTelegram() {
+    const data = getShareData();
+    const shareUrl = `https://t.me/share/url?url=${data.url}&text=${data.title}`;
+    window.open(shareUrl, '_blank', 'width=600,height=500');
+}
+
+function copyLink() {
+    const url = window.location.href;
+    if (navigator.clipboard) {
+        navigator.clipboard.writeText(url).then(() => {
+            showToast('✅ ლინკი დაკოპირდა!', 'success');
+        }).catch(() => {
+            fallbackCopy(url);
+        });
+    } else {
+        fallbackCopy(url);
+    }
+}
+
+function fallbackCopy(text) {
+    const textarea = document.createElement('textarea');
+    textarea.value = text;
+    textarea.style.position = 'fixed';
+    textarea.style.opacity = '0';
+    document.body.appendChild(textarea);
+    textarea.select();
+    try {
+        document.execCommand('copy');
+        showToast('✅ ლინკი დაკოპირდა!', 'success');
+    } catch (err) {
+        showToast('❌ ლინკის კოპირება ვერ მოხერხდა', 'error');
+    }
+    document.body.removeChild(textarea);
+}
+
+// ========== TOAST MESSAGE ==========
+function showToast(message, type = '') {
+    const toast = document.getElementById('toastMessage');
+    toast.textContent = message;
+    toast.className = 'toast-message';
+    if (type) {
+        toast.classList.add(type);
+    }
+    toast.classList.add('show');
+    
+    clearTimeout(toast._timeout);
+    toast._timeout = setTimeout(() => {
+        toast.classList.remove('show');
+    }, 3000);
 }
 </script>
 {% endblock %}
