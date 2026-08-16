@@ -1,29 +1,21 @@
 from flask_sqlalchemy import SQLAlchemy
 from datetime import datetime
+from flask_login import UserMixin
 
 db = SQLAlchemy()
 
 
-class User(db.Model):
+class User(UserMixin, db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(100), nullable=False)
-    email = db.Column(db.String(100), unique=True, nullable=False)
-    phone = db.Column(db.String(20), nullable=False)
+    email = db.Column(db.String(100), unique=True, nullable=True)
+    phone = db.Column(db.String(20), unique=True, nullable=False)
     password = db.Column(db.String(200), nullable=False)
     is_admin = db.Column(db.Boolean, default=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
-    def is_authenticated(self):
-        return True
-
-    def is_active(self):
-        return True
-
-    def is_anonymous(self):
-        return False
-
-    def get_id(self):
-        return str(self.id)
+    def __repr__(self):
+        return f'<User {self.name} ({self.phone})>'
 
 
 class Category(db.Model):
@@ -122,7 +114,7 @@ class ChatConversation(db.Model):
     admin = db.relationship('User', foreign_keys=[admin_id], backref='admin_conversations')
 
 
-# ========== OLD MESSAGE SYSTEM (keep for compatibility) ==========
+# ========== OLD MESSAGE SYSTEM (for compatibility) ==========
 
 class Message(db.Model):
     id = db.Column(db.Integer, primary_key=True)
