@@ -409,7 +409,7 @@ body.intro-active { overflow: hidden; }
     background: linear-gradient(180deg, transparent 0%, var(--bg) 100%);
 }
 
-/* ========== CATEGORIES DROPDOWN ========== */
+/* ========== CATEGORIES DROPDOWN - FIXED ========== */
 .categories-section {
     padding: 50px 20px 30px;
     max-width: 1300px;
@@ -1508,7 +1508,9 @@ body.intro-active { overflow: hidden; }
     <div class="wave-divider"></div>
 </div>
 
-<!-- CATEGORIES DROPDOWN SECTION -->
+<!-- ============================================================ -->
+<!-- CATEGORIES DROPDOWN SECTION - FIXED -->
+<!-- ============================================================ -->
 <div class="categories-section">
     <div class="categories-header">
         <h2>კატეგორიები</h2>
@@ -1516,16 +1518,21 @@ body.intro-active { overflow: hidden; }
     </div>
     <div style="display: flex; justify-content: center;">
         <div class="luxury-dropdown" id="categoriesDropdown">
-            <button class="dropdown-btn" onclick="toggleDropdown()">
+            <button class="dropdown-btn" type="button" onclick="toggleDropdown(event)">
                 <div class="dropdown-btn-left">
                     <i class="fas fa-crown"></i>
-                    <span>ყველა კატეგორია</span>
+                    <span id="dropdownSelectedText">ყველა კატეგორია</span>
                 </div>
                 <i class="fas fa-chevron-down arrow-icon"></i>
             </button>
-            <div class="dropdown-menu">
+            <div class="dropdown-menu" id="dropdownMenu">
+                <a href="{{ url_for('shop') }}" class="dropdown-item" onclick="updateDropdownText(this, 'ყველა კატეგორია')">
+                    <i class="fas fa-th"></i>
+                    <span>ყველა კატეგორია</span>
+                    <i class="fas fa-arrow-right hover-arrow"></i>
+                </a>
                 {% for category in categories %}
-                <a href="{{ url_for('shop', category=category.id) }}" class="dropdown-item">
+                <a href="{{ url_for('shop', category=category.id) }}" class="dropdown-item" onclick="updateDropdownText(this, '{{ category.name }}')">
                     <i class="fas fa-tag"></i>
                     <span>{{ category.name }}</span>
                     <i class="fas fa-arrow-right hover-arrow"></i>
@@ -1661,16 +1668,42 @@ document.addEventListener('DOMContentLoaded', function() {
     initTestimonialSlider();
 });
 
-// Dropdown
-function toggleDropdown() {
-    document.getElementById('categoriesDropdown').classList.toggle('active');
+// ================================================================
+// ========== DROPDOWN TOGGLE - FIXED ==========
+// ================================================================
+function toggleDropdown(event) {
+    if (event) {
+        event.stopPropagation();
+        event.preventDefault();
+    }
+    const dropdown = document.getElementById('categoriesDropdown');
+    if (dropdown) {
+        dropdown.classList.toggle('active');
+    }
 }
+
+// Close dropdown when clicking outside
 document.addEventListener('click', function(event) {
     const dropdown = document.getElementById('categoriesDropdown');
-    if (dropdown && !dropdown.contains(event.target) && dropdown.classList.contains('active')) {
+    if (dropdown && !dropdown.contains(event.target)) {
         dropdown.classList.remove('active');
     }
 });
+
+// Update dropdown text when a category is selected
+function updateDropdownText(element, text) {
+    const selectedText = document.getElementById('dropdownSelectedText');
+    if (selectedText) {
+        selectedText.textContent = text;
+    }
+    // Close dropdown
+    const dropdown = document.getElementById('categoriesDropdown');
+    if (dropdown) {
+        dropdown.classList.remove('active');
+    }
+}
+
+// ================================================================
 
 // Testimonial Slider
 let currentTestimonial = 0;
