@@ -409,7 +409,7 @@ body.intro-active { overflow: hidden; }
     background: linear-gradient(180deg, transparent 0%, var(--bg) 100%);
 }
 
-/* ========== CATEGORIES DROPDOWN - FIXED ========== */
+/* ========== CATEGORIES DROPDOWN ========== */
 .categories-section {
     padding: 50px 20px 30px;
     max-width: 1300px;
@@ -1173,7 +1173,6 @@ body.intro-active { overflow: hidden; }
 
 /* ========== MOBILE OPTIMIZATION - SHORTER & COMPACT ========== */
 @media (max-width: 768px) {
-    /* Hero Slider - shorter */
     .hero-slider {
         height: 55vh;
         min-height: 380px;
@@ -1198,7 +1197,6 @@ body.intro-active { overflow: hidden; }
         gap: 10px;
     }
 
-    /* Arrows - smaller */
     .arrow {
         width: 36px;
         height: 36px;
@@ -1208,7 +1206,6 @@ body.intro-active { overflow: hidden; }
     .arrow.left { left: 12px; }
     .arrow.right { right: 12px; }
 
-    /* Categories Section - compact */
     .categories-section {
         padding: 20px 15px;
     }
@@ -1231,7 +1228,6 @@ body.intro-active { overflow: hidden; }
         font-size: 16px;
     }
 
-    /* Features Bar - very compact */
     .features-bar {
         padding: 12px 15px;
         margin: 10px 15px 25px;
@@ -1265,7 +1261,6 @@ body.intro-active { overflow: hidden; }
         font-size: 0.55rem;
     }
 
-    /* Section Title - smaller */
     .section {
         padding: 25px 15px;
     }
@@ -1280,7 +1275,6 @@ body.intro-active { overflow: hidden; }
         margin: 10px auto 0;
     }
 
-    /* Products - more compact */
     .products {
         gap: 12px;
     }
@@ -1321,7 +1315,6 @@ body.intro-active { overflow: hidden; }
         text-align: center;
     }
 
-    /* Testimonials - shorter */
     .testimonials-slider {
         margin: 30px 15px;
         padding: 30px 20px;
@@ -1373,7 +1366,6 @@ body.intro-active { overflow: hidden; }
         gap: 8px;
     }
 
-    /* CTA Section - shorter */
     .cta-section {
         padding: 35px 20px;
         margin: 20px 15px 40px;
@@ -1400,7 +1392,6 @@ body.intro-active { overflow: hidden; }
         font-size: 14px;
     }
 
-    /* Intro - smaller */
     .intro-logo {
         font-size: 36px;
         letter-spacing: 3px;
@@ -1509,7 +1500,7 @@ body.intro-active { overflow: hidden; }
 </div>
 
 <!-- ============================================================ -->
-<!-- CATEGORIES DROPDOWN SECTION - FIXED -->
+<!-- CATEGORIES DROPDOWN SECTION - FULLY FIXED -->
 <!-- ============================================================ -->
 <div class="categories-section">
     <div class="categories-header">
@@ -1518,21 +1509,23 @@ body.intro-active { overflow: hidden; }
     </div>
     <div style="display: flex; justify-content: center;">
         <div class="luxury-dropdown" id="categoriesDropdown">
-            <button class="dropdown-btn" type="button" onclick="toggleDropdown(event)">
+            <!-- ღილაკი -->
+            <button class="dropdown-btn" type="button" id="dropdownToggleBtn" onclick="toggleDropdown(event)">
                 <div class="dropdown-btn-left">
                     <i class="fas fa-crown"></i>
                     <span id="dropdownSelectedText">ყველა კატეგორია</span>
                 </div>
                 <i class="fas fa-chevron-down arrow-icon"></i>
             </button>
+            <!-- მენიუ -->
             <div class="dropdown-menu" id="dropdownMenu">
-                <a href="{{ url_for('shop') }}" class="dropdown-item" onclick="updateDropdownText(this, 'ყველა კატეგორია')">
+                <a href="{{ url_for('shop') }}" class="dropdown-item" data-text="ყველა კატეგორია">
                     <i class="fas fa-th"></i>
                     <span>ყველა კატეგორია</span>
                     <i class="fas fa-arrow-right hover-arrow"></i>
                 </a>
                 {% for category in categories %}
-                <a href="{{ url_for('shop', category=category.id) }}" class="dropdown-item" onclick="updateDropdownText(this, '{{ category.name }}')">
+                <a href="{{ url_for('shop', category=category.id) }}" class="dropdown-item" data-text="{{ category.name }}">
                     <i class="fas fa-tag"></i>
                     <span>{{ category.name }}</span>
                     <i class="fas fa-arrow-right hover-arrow"></i>
@@ -1666,10 +1659,28 @@ document.addEventListener('DOMContentLoaded', function() {
     }, 2800);
 
     initTestimonialSlider();
+    
+    // ===== DROPDOWN ITEM CLICK HANDLER =====
+    document.querySelectorAll('.dropdown-item').forEach(function(item) {
+        item.addEventListener('click', function(e) {
+            // Update the button text
+            const text = this.getAttribute('data-text') || this.querySelector('span')?.textContent || 'ყველა კატეგორია';
+            const selectedText = document.getElementById('dropdownSelectedText');
+            if (selectedText) {
+                selectedText.textContent = text;
+            }
+            // Close the dropdown
+            const dropdown = document.getElementById('categoriesDropdown');
+            if (dropdown) {
+                dropdown.classList.remove('active');
+            }
+            // Allow navigation to proceed
+        });
+    });
 });
 
 // ================================================================
-// ========== DROPDOWN TOGGLE - FIXED ==========
+// ========== DROPDOWN TOGGLE - FULLY FIXED ==========
 // ================================================================
 function toggleDropdown(event) {
     if (event) {
@@ -1685,23 +1696,11 @@ function toggleDropdown(event) {
 // Close dropdown when clicking outside
 document.addEventListener('click', function(event) {
     const dropdown = document.getElementById('categoriesDropdown');
+    const toggleBtn = document.getElementById('dropdownToggleBtn');
     if (dropdown && !dropdown.contains(event.target)) {
         dropdown.classList.remove('active');
     }
 });
-
-// Update dropdown text when a category is selected
-function updateDropdownText(element, text) {
-    const selectedText = document.getElementById('dropdownSelectedText');
-    if (selectedText) {
-        selectedText.textContent = text;
-    }
-    // Close dropdown
-    const dropdown = document.getElementById('categoriesDropdown');
-    if (dropdown) {
-        dropdown.classList.remove('active');
-    }
-}
 
 // ================================================================
 
