@@ -1510,8 +1510,7 @@ body.intro-active { overflow: hidden; }
     <div style="display: flex; justify-content: center;">
         <div class="luxury-dropdown" id="categoriesDropdown">
             <!-- ღილაკი -->
-            <button class="dropdown-btn" type="button" id="dropdownToggleBtn" onclick="toggleDropdown(event)">
-                <div class="dropdown-btn-left">
+<button class="dropdown-btn" type="button" id="dropdownToggleBtn">                <div class="dropdown-btn-left">
                     <i class="fas fa-crown"></i>
                     <span id="dropdownSelectedText">ყველა კატეგორია</span>
                 </div>
@@ -1682,22 +1681,31 @@ document.addEventListener('DOMContentLoaded', function() {
 // ================================================================
 // ========== DROPDOWN TOGGLE - FULLY FIXED ==========
 // ================================================================
-function toggleDropdown(event) {
-    event.stopPropagation();
+document.addEventListener('DOMContentLoaded', function () {
 
     const dropdown = document.getElementById('categoriesDropdown');
+    const button = document.getElementById('dropdownToggleBtn');
 
-    if (dropdown) {
-        dropdown.classList.toggle('active');
+    if (dropdown && button) {
+
+        button.addEventListener('click', function (event) {
+            event.stopPropagation();
+            dropdown.classList.toggle('active');
+        });
+
+        dropdown.querySelectorAll('.dropdown-item').forEach(function (item) {
+            item.addEventListener('click', function () {
+                dropdown.classList.remove('active');
+            });
+        });
+
+        document.addEventListener('click', function (event) {
+            if (!dropdown.contains(event.target)) {
+                dropdown.classList.remove('active');
+            }
+        });
     }
-}
 
-document.addEventListener('click', function(event) {
-    const dropdown = document.getElementById('categoriesDropdown');
-
-    if (dropdown && !dropdown.contains(event.target)) {
-        dropdown.classList.remove('active');
-    }
 });
 
 // ================================================================
