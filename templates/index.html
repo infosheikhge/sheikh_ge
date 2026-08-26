@@ -1683,20 +1683,18 @@ document.addEventListener('DOMContentLoaded', function() {
 // ========== DROPDOWN TOGGLE - FULLY FIXED ==========
 // ================================================================
 function toggleDropdown(event) {
-    if (event) {
-        event.stopPropagation();
-        event.preventDefault();
-    }
+    event.stopPropagation();
+
     const dropdown = document.getElementById('categoriesDropdown');
+
     if (dropdown) {
         dropdown.classList.toggle('active');
     }
 }
 
-// Close dropdown when clicking outside
 document.addEventListener('click', function(event) {
     const dropdown = document.getElementById('categoriesDropdown');
-    const toggleBtn = document.getElementById('dropdownToggleBtn');
+
     if (dropdown && !dropdown.contains(event.target)) {
         dropdown.classList.remove('active');
     }
