@@ -648,7 +648,6 @@ body.intro-active { overflow: hidden; }
     margin-top: 10px;
 }
 
-/* Desktop: 4 products */
 @media (max-width: 1100px) {
     .products {
         grid-template-columns: repeat(3, 1fr);
@@ -656,7 +655,6 @@ body.intro-active { overflow: hidden; }
     }
 }
 
-/* Tablet: 2 products */
 @media (max-width: 800px) {
     .products {
         grid-template-columns: repeat(2, 1fr);
@@ -664,7 +662,6 @@ body.intro-active { overflow: hidden; }
     }
 }
 
-/* Mobile: 2 products - COMPACT */
 @media (max-width: 550px) {
     .products {
         grid-template-columns: repeat(2, 1fr);
@@ -738,7 +735,6 @@ body.intro-active { overflow: hidden; }
     }
 }
 
-/* Product Card Base Styles */
 .product-card {
     background: var(--card);
     border-radius: 20px;
@@ -895,6 +891,7 @@ body.intro-active { overflow: hidden; }
     border-color: var(--gold);
     transform: translateY(-2px);
 }
+
 /* ========== TESTIMONIALS SLIDER ========== */
 .testimonials-slider {
     background: white;
@@ -1171,7 +1168,6 @@ body.intro-active { overflow: hidden; }
     to { opacity: 1; transform: translate(-50%, -50%); }
 }
 
-/* ========== MOBILE OPTIMIZATION - SHORTER & COMPACT ========== */
 @media (max-width: 768px) {
     .hero-slider {
         height: 55vh;
@@ -1457,6 +1453,8 @@ body.intro-active { overflow: hidden; }
 <!-- HERO SLIDER -->
 <section class="hero-slider">
     <div class="slides-container">
+
+        <!-- სლაიდი 1 -->
         <div class="slide active" style="background-image:url('https://images.unsplash.com/photo-1518684079-3c830dcef090');">
             <div class="overlay"></div>
             <div class="content">
@@ -1468,14 +1466,21 @@ body.intro-active { overflow: hidden; }
                 </div>
             </div>
         </div>
-        <div class="slide" style="background-image:url('https://images.unsplash.com/photo-1506744038136-46273834b3fb');">
+
+        <!-- სლაიდი 2 - Sheikh.ge + Smart Express (შენი ფოტო) -->
+        <div class="slide" style="background-image:url('{{ url_for("static", filename="uploads/Gemini_Generated_Image_ryauwxryauwxryau.jpg") }}');">
             <div class="overlay"></div>
             <div class="content">
-                <h1>სტილი და <span>ხარისხი</span></h1>
-                <p>საუკეთესო არჩევანი შენთვის</p>
-                <div class="btn-group"><a href="{{ url_for('shop') }}" class="btn-gold">კოლექცია</a></div>
+                <h1>სანდო <span>პარტნიორობა</span></h1>
+                <p>Sheikh.ge + Smart Express — სწრაფი და უსაფრთხო მიწოდება</p>
+                <div class="btn-group">
+                    <a href="{{ url_for('shop') }}" class="btn-gold">შოპინგი</a>
+                    <a href="{{ url_for('about') }}" class="btn-outline">ვრცლად</a>
+                </div>
             </div>
         </div>
+
+        <!-- სლაიდი 3 -->
         <div class="slide" style="background-image:url('https://images.unsplash.com/photo-1523275335684-37898b6baf30');">
             <div class="overlay"></div>
             <div class="content">
@@ -1487,6 +1492,7 @@ body.intro-active { overflow: hidden; }
                 </div>
             </div>
         </div>
+
     </div>
     <div class="arrow left">&#10094;</div>
     <div class="arrow right">&#10095;</div>
@@ -1500,7 +1506,7 @@ body.intro-active { overflow: hidden; }
 </div>
 
 <!-- ============================================================ -->
-<!-- CATEGORIES DROPDOWN SECTION - FULLY FIXED -->
+<!-- CATEGORIES DROPDOWN SECTION -->
 <!-- ============================================================ -->
 <div class="categories-section">
     <div class="categories-header">
@@ -1509,14 +1515,13 @@ body.intro-active { overflow: hidden; }
     </div>
     <div style="display: flex; justify-content: center;">
         <div class="luxury-dropdown" id="categoriesDropdown">
-            <!-- ღილაკი -->
-<button class="dropdown-btn" type="button" id="dropdownToggleBtn">                <div class="dropdown-btn-left">
+            <button class="dropdown-btn" type="button" id="dropdownToggleBtn">
+                <div class="dropdown-btn-left">
                     <i class="fas fa-crown"></i>
                     <span id="dropdownSelectedText">ყველა კატეგორია</span>
                 </div>
                 <i class="fas fa-chevron-down arrow-icon"></i>
             </button>
-            <!-- მენიუ -->
             <div class="dropdown-menu" id="dropdownMenu">
                 <a href="{{ url_for('shop') }}" class="dropdown-item" data-text="ყველა კატეგორია">
                     <i class="fas fa-th"></i>
@@ -1552,8 +1557,9 @@ body.intro-active { overflow: hidden; }
         {% for product in products %}
         <div class="product-card">
             <div class="product-image">
-<img src="{{ product.image if product.image and product.image.startswith('http') else url_for('static', filename=product.image) if product.image else 'https://via.placeholder.com/400x270?text=Luxury' }}" 
-alt="{{ product.name }}">                <div class="image-overlay"></div>
+                <img src="{{ product.image if product.image and product.image.startswith('http') else url_for('static', filename=product.image) if product.image else 'https://via.placeholder.com/400x270?text=Luxury' }}"
+                     alt="{{ product.name }}">
+                <div class="image-overlay"></div>
                 {% if product.is_new %}<span class="badge">NEW</span>{% endif %}
             </div>
             <div class="product-info">
@@ -1658,36 +1664,27 @@ document.addEventListener('DOMContentLoaded', function() {
     }, 2800);
 
     initTestimonialSlider();
-    
-    // ===== DROPDOWN ITEM CLICK HANDLER =====
+
     document.querySelectorAll('.dropdown-item').forEach(function(item) {
         item.addEventListener('click', function(e) {
-            // Update the button text
             const text = this.getAttribute('data-text') || this.querySelector('span')?.textContent || 'ყველა კატეგორია';
             const selectedText = document.getElementById('dropdownSelectedText');
             if (selectedText) {
                 selectedText.textContent = text;
             }
-            // Close the dropdown
             const dropdown = document.getElementById('categoriesDropdown');
             if (dropdown) {
                 dropdown.classList.remove('active');
             }
-            // Allow navigation to proceed
         });
     });
 });
 
-// ================================================================
-// ========== DROPDOWN TOGGLE - FULLY FIXED ==========
-// ================================================================
 document.addEventListener('DOMContentLoaded', function () {
-
     const dropdown = document.getElementById('categoriesDropdown');
     const button = document.getElementById('dropdownToggleBtn');
 
     if (dropdown && button) {
-
         button.addEventListener('click', function (event) {
             event.stopPropagation();
             dropdown.classList.toggle('active');
@@ -1705,10 +1702,7 @@ document.addEventListener('DOMContentLoaded', function () {
             }
         });
     }
-
 });
-
-// ================================================================
 
 // Testimonial Slider
 let currentTestimonial = 0;
