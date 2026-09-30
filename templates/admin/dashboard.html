@@ -335,6 +335,20 @@
     letter-spacing: 1px;
 }
 
+/* Users Stat Card Special Style */
+.stat-card-users {
+    position: relative;
+}
+
+.stat-card-users:hover {
+    border-color: var(--gold);
+    box-shadow: var(--shadow-gold);
+}
+
+.stat-card-users:active {
+    transform: scale(0.98);
+}
+
 /* Admin Cards - Responsive */
 .admin-card {
     background: white;
@@ -648,6 +662,20 @@
 .stat-card:nth-child(3) { animation-delay: 0.15s; }
 .stat-card:nth-child(4) { animation-delay: 0.2s; }
 
+/* Users List Card Animation */
+#usersListCard {
+    animation: fadeInUp 0.4s ease;
+}
+
+/* Users Table Row Hover */
+#usersTableBody tr {
+    transition: background 0.2s ease;
+}
+
+#usersTableBody tr:hover {
+    background: rgba(212,175,55,0.04);
+}
+
 /* Scrollbar */
 .admin-sidebar::-webkit-scrollbar {
     width: 4px;
@@ -685,6 +713,14 @@ body {
 img, video, iframe {
     max-width: 100%;
     height: auto;
+}
+
+/* Mobile optimization for users table */
+@media (max-width: 650px) {
+    #usersTableBody td {
+        font-size: 11px;
+        padding: 8px 6px;
+    }
 }
 </style>
 
@@ -768,10 +804,48 @@ img, video, iframe {
                 <div class="stat-label">შეკვეთა</div>
             </div>
 
-            <div class="stat-card">
+            <div class="stat-card stat-card-users" onclick="toggleUsersList()">
                 <div class="stat-icon"><i class="fas fa-users"></i></div>
                 <div class="stat-number">{{ total_users|default(0) }}</div>
-                <div class="stat-label">მომხმარებელი</div>
+                <div class="stat-label">
+                    მომხმარებელი
+                    <i class="fas fa-chevron-down" id="usersChevron" style="margin-left: 6px; font-size: 10px; transition: transform 0.3s;"></i>
+                </div>
+            </div>
+        </div>
+
+        <!-- Users List Accordion -->
+        <div class="admin-card" id="usersListCard" style="display: none;">
+            <h2 class="card-title">დარეგისტრირებული მომხმარებლები</h2>
+
+            <div id="usersListLoading" style="text-align: center; padding: 30px; color: var(--text-gray);">
+                <i class="fas fa-spinner fa-spin" style="font-size: 24px; color: var(--gold);"></i>
+                <p style="margin-top: 10px;">იტვირთება...</p>
+            </div>
+
+            <div id="usersListContent" style="display: none;">
+                <div class="table-responsive">
+                    <table class="admin-table">
+                        <thead>
+                            <tr>
+                                <th>#</th>
+                                <th>სახელი</th>
+                                <th>მეილი</th>
+                                <th>ტელეფონი</th>
+                                <th>შეკვეთები</th>
+                                <th>რეგისტრაცია</th>
+                            </tr>
+                        </thead>
+                        <tbody id="usersTableBody">
+                            <!-- JS შეავსებს -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div id="usersListEmpty" style="display: none;" class="empty-state">
+                <i class="fas fa-users"></i>
+                <p>მომხმარებლები არ არიან</p>
             </div>
         </div>
 
@@ -832,16 +906,16 @@ img, video, iframe {
                         <tr>
                             <td><span style="font-weight: 600;">#{{ order.id }}</span></td>
                             <td>{{ order.name|truncate(20) }}</td>
-                      <td>
-    {% if order.items %}
-        <img src="{{ order.items[0].product.image }}" 
-             alt="{{ order.items[0].product.name }}"
-             style="width: 40px; height: 40px; object-fit: cover; border-radius: 8px; border: 1px solid rgba(212,175,55,0.2);"
-             onerror="this.src='https://via.placeholder.com/40x40?text=No+Image'">
-    {% else %}
-        <span style="color: var(--text-gray);">-</span>
-    {% endif %}
-</td>
+                            <td>
+                                {% if order.items %}
+                                <img src="{{ order.items[0].product.image }}" 
+                                     alt="{{ order.items[0].product.name }}"
+                                     style="width: 40px; height: 40px; object-fit: cover; border-radius: 8px; border: 1px solid rgba(212,175,55,0.2);"
+                                     onerror="this.src='https://via.placeholder.com/40x40?text=No+Image'">
+                                {% else %}
+                                <span style="color: var(--text-gray);">-</span>
+                                {% endif %}
+                            </td>
                             <td><strong>₾{{ "%.2f"|format(order.total) }}</strong></td>
                             <td>
                                 <span class="status-badge
@@ -885,7 +959,7 @@ img, video, iframe {
                 </div>
                 <div class="info-item">
                     <div class="info-label">მონაცემთა ბაზა</div>
-                    <div class="info-value">SQLite</div>
+                    <div class="info-value">PostgreSQL</div>
                 </div>
                 <div class="info-item">
                     <div class="info-label">სერვერის დრო</div>
@@ -893,7 +967,7 @@ img, video, iframe {
                 </div>
                 <div class="info-item">
                     <div class="info-label">გარემო</div>
-                    <div class="info-value">Development</div>
+                    <div class="info-value">Production</div>
                 </div>
             </div>
         </div>
@@ -901,7 +975,10 @@ img, video, iframe {
 </div>
 
 <script>
-// Toggle Sidebar function - now triggered by base.html's burger menu
+// ================================================================
+// ========== SIDEBAR TOGGLE ==========
+// ================================================================
+
 function toggleAdminSidebar() {
     const sidebar = document.getElementById('adminSidebar');
     const overlay = document.getElementById('sidebarOverlay');
@@ -916,7 +993,6 @@ function toggleAdminSidebar() {
     }
 }
 
-// Close Sidebar
 function closeSidebar() {
     const sidebar = document.getElementById('adminSidebar');
     const overlay = document.getElementById('sidebarOverlay');
@@ -926,7 +1002,6 @@ function closeSidebar() {
     document.body.style.overflow = '';
 }
 
-// Close sidebar when clicking on a link (for mobile)
 document.querySelectorAll('.admin-menu-link').forEach(link => {
     link.addEventListener('click', () => {
         if (window.innerWidth <= 1024) {
@@ -935,22 +1010,20 @@ document.querySelectorAll('.admin-menu-link').forEach(link => {
     });
 });
 
-// Handle window resize - close sidebar on large screens
 window.addEventListener('resize', () => {
     if (window.innerWidth > 1024) {
         closeSidebar();
     }
 });
 
-// Close sidebar on escape key
 document.addEventListener('keydown', (e) => {
     if (e.key === 'Escape') {
         closeSidebar();
     }
 });
 
-// Stat card click animation
-document.querySelectorAll('.stat-card').forEach(card => {
+// Stat card click animation (except users card)
+document.querySelectorAll('.stat-card:not(.stat-card-users)').forEach(card => {
     card.addEventListener('click', () => {
         card.style.transform = 'scale(0.98)';
         setTimeout(() => {
@@ -959,8 +1032,110 @@ document.querySelectorAll('.stat-card').forEach(card => {
     });
 });
 
-// Expose functions globally for base.html burger menu
+// ================================================================
+// ========== USERS LIST TOGGLE ==========
+// ================================================================
+
+let usersListLoaded = false;
+
+function toggleUsersList() {
+    const card = document.getElementById('usersListCard');
+    const chevron = document.getElementById('usersChevron');
+
+    if (!card) return;
+
+    // თუ ღიაა — დახურე
+    if (card.style.display === 'block') {
+        card.style.display = 'none';
+        if (chevron) chevron.style.transform = 'rotate(0deg)';
+        return;
+    }
+
+    // გახსენი
+    card.style.display = 'block';
+    if (chevron) chevron.style.transform = 'rotate(180deg)';
+
+    // თუ ჯერ არ ჩატვირთულა — ჩატვირთე
+    if (!usersListLoaded) {
+        loadUsersList();
+    }
+
+    // გადაადგილდი სიისკენ
+    setTimeout(() => {
+        card.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }, 100);
+}
+
+function loadUsersList() {
+    const loading = document.getElementById('usersListLoading');
+    const content = document.getElementById('usersListContent');
+    const empty = document.getElementById('usersListEmpty');
+    const tbody = document.getElementById('usersTableBody');
+
+    fetch('/admin/api/users-list')
+        .then(response => response.json())
+        .then(data => {
+            loading.style.display = 'none';
+
+            if (!data.success || !data.users || data.users.length === 0) {
+                empty.style.display = 'block';
+                return;
+            }
+
+            tbody.innerHTML = '';
+            data.users.forEach((user, index) => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td><span style="font-weight: 600; color: var(--gold-dark);">${index + 1}</span></td>
+                    <td>
+                        <div style="display: flex; align-items: center; gap: 8px;">
+                            <div style="width: 32px; height: 32px; border-radius: 50%; background: linear-gradient(135deg, #fff8eb, #fff); display: flex; align-items: center; justify-content: center; border: 1px solid rgba(212,175,55,0.2); flex-shrink: 0;">
+                                <i class="fas fa-user" style="color: var(--gold); font-size: 12px;"></i>
+                            </div>
+                            <span style="font-weight: 500; color: var(--dark);">${escapeHtml(user.name)}</span>
+                        </div>
+                    </td>
+                    <td>
+                        <a href="mailto:${escapeHtml(user.email)}" style="color: var(--gold-dark); text-decoration: none;">
+                            ${escapeHtml(user.email)}
+                        </a>
+                    </td>
+                    <td>
+                        <a href="tel:${escapeHtml(user.phone)}" style="color: var(--text-gray); text-decoration: none;">
+                            ${escapeHtml(user.phone)}
+                        </a>
+                    </td>
+                    <td>
+                        <span class="status-badge">${user.orders_count} შეკვეთა</span>
+                    </td>
+                    <td style="color: var(--text-gray); font-size: 12px;">${escapeHtml(user.created_at)}</td>
+                `;
+                tbody.appendChild(row);
+            });
+
+            content.style.display = 'block';
+            usersListLoaded = true;
+        })
+        .catch(error => {
+            console.error('Error loading users:', error);
+            loading.innerHTML = `
+                <i class="fas fa-exclamation-triangle" style="font-size: 24px; color: #f44336;"></i>
+                <p style="margin-top: 10px; color: #f44336;">ჩატვირთვა ვერ მოხერხდა</p>
+            `;
+        });
+}
+
+// HTML-ის დაცვა XSS-ისგან
+function escapeHtml(text) {
+    if (!text) return '';
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+}
+
+// Expose functions globally
 window.toggleAdminSidebar = toggleAdminSidebar;
 window.closeSidebar = closeSidebar;
+window.toggleUsersList = toggleUsersList;
 </script>
 {% endblock %}
