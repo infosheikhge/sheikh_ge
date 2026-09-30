@@ -1215,7 +1215,32 @@ def bulk_message_action():
 # ============================================================================
 # Authentication Routes
 # ============================================================================
-
+@app.route('/admin/api/users-list')
+@admin_required
+def admin_users_list():
+    """აბრუნებს ყველა დარეგისტრირებული მომხმარებლის სიას JSON-ად"""
+    try:
+        users = User.query.filter_by(is_admin=False).order_by(User.created_at.desc()).all()
+        
+        result = []
+        for user in users:
+            # ვითვლით შეკვეთების რაოდენობას
+            orders_count = Order.query.filter_by(user_id=user.id).count()
+            
+            result.append({
+                'id': user.id,
+                'name': user.name,
+                'email': user.email or '—',
+                'phone': user.phone or '—',
+                'orders_count': orders_count,
+                'created_at': user.created_at.strftime('%d.%m.%Y') if user.created_at else '—'
+            })
+        
+        return jsonify({'users': result, 'success': True})
+    
+    except Exception as e:
+        print(f"Error getting users list: {e}")
+        return jsonify({'users': [], 'success': False}), 500
 @app.route('/register', methods=['GET', 'POST'])
 def register():
     if request.method == 'POST':
