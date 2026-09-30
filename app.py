@@ -870,6 +870,29 @@ def delete_order(order_id):
     flash('Order deleted successfully', 'success')
     return redirect(url_for('admin_orders'))
 
+@app.route('/admin/order/<int:order_id>/status', methods=['POST'])
+@admin_required
+def update_order_status(order_id):
+    """ადმინი ცვლის შეკვეთის სტატუსს"""
+    try:
+        order = Order.query.get_or_404(order_id)
+        
+        data = request.get_json()
+        new_status = data.get('status')
+        
+        if new_status not in ['pending', 'completed', 'cancelled']:
+            return jsonify({'success': False, 'error': 'Invalid status'}), 400
+        
+        order.status = new_status
+        db.session.commit()
+        
+        return jsonify({'success': True, 'status': new_status})
+    
+    except Exception as e:
+        print(f"Error updating order status: {e}")
+        db.session.rollback()
+        return jsonify({'success': False, 'error': str(e)}), 500
+
 
 # ============================================================================
 # PRODUCT ROUTES
