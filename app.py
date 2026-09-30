@@ -182,6 +182,10 @@ def contact_page():
 # ============================================================================
 
 def upload_to_cloudinary(file, folder='products'):
+    """
+    ატვირთავს ფაილს Cloudinary-ზე.
+    თუ ვერ მუშაობს — აბრუნებს None-ს და ლოკალურად არ ინახავს.
+    """
     try:
         result = cloudinary.uploader.upload(
             file,
@@ -226,10 +230,11 @@ def add_product_image(product_id):
     files = request.files.getlist('images')
     max_order = db.session.query(db.func.max(ProductImage.display_order)).filter_by(product_id=product_id).scalar() or 0
 
+    uploaded_count = 0
     for idx, file in enumerate(files):
         if file and file.filename and allowed_image(file.filename):
             cloudinary_url = upload_to_cloudinary(file, f'products/product_{product_id}')
-            
+
             if cloudinary_url:
                 image = ProductImage(
                     product_id=product_id,
@@ -237,22 +242,14 @@ def add_product_image(product_id):
                     display_order=max_order + idx + 1
                 )
                 db.session.add(image)
-            else:
-                filename = secure_filename(file.filename)
-                timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
-                unique_filename = f"product_{product_id}_{timestamp}_{idx}_{filename}"
-                file_path = os.path.join(app.config['UPLOAD_FOLDER'], 'products', unique_filename)
-                file.save(file_path)
-                
-                image = ProductImage(
-                    product_id=product_id,
-                    image_path=f'uploads/products/{unique_filename}',
-                    display_order=max_order + idx + 1
-                )
-                db.session.add(image)
+                uploaded_count += 1
+            # თუ ვერ ატვირთა — უბრალოდ გამოტოვე (არ შეინახო ლოკალურად)
 
     db.session.commit()
-    flash(f'{len(files)} სურათი წარმატებით დაემატა!', 'success')
+    if uploaded_count > 0:
+        flash(f'{uploaded_count} სურათი წარმატებით დაემატა!', 'success')
+    else:
+        flash('სურათების ატვირთვა ვერ მოხერხდა. გთხოვთ სცადოთ თავიდან.', 'error')
     return redirect(url_for('manage_product_images', product_id=product_id))
 
 
@@ -261,7 +258,7 @@ def add_product_image(product_id):
 def delete_product_image(image_id):
     image = ProductImage.query.get_or_404(image_id)
     product_id = image.product_id
-    
+
     if 'cloudinary.com' in image.image_path:
         try:
             parts = image.image_path.split('/')
@@ -272,14 +269,10 @@ def delete_product_image(image_id):
             delete_from_cloudinary(public_id)
         except Exception as e:
             print(f"Error deleting from Cloudinary: {e}")
-    else:
-        file_path = os.path.join(app.config['UPLOAD_FOLDER'], 'products', os.path.basename(image.image_path))
-        if os.path.exists(file_path):
-            os.remove(file_path)
-    
+
     db.session.delete(image)
     db.session.commit()
-    
+
     flash('სურათი წარმატებით წაიშალა!', 'success')
     return redirect(url_for('manage_product_images', product_id=product_id))
 
@@ -289,11 +282,11 @@ def delete_product_image(image_id):
 def set_main_image(image_id):
     image = ProductImage.query.get_or_404(image_id)
     product = image.product
-    
+
     old_main = product.image
     product.image = image.image_path
     image.image_path = old_main
-    
+
     db.session.commit()
     flash('მთავარი ფოტო წარმატებით შეიცვალა!', 'success')
     return redirect(url_for('manage_product_images', product_id=product.id))
@@ -321,30 +314,27 @@ def chat_send():
             return jsonify({'success': False, 'error': 'Name and phone are required'}), 400
 
         user = None
-        
+
         # 1. ვცადოთ ტელეფონით მოძებნა (მთავარი იდენტიფიკატორი)
         user = User.query.filter_by(phone=user_phone).first()
-        
+
         # 2. თუ ვერ ვიპოვეთ, ვცადოთ email-ით
         if not user and user_email:
             user = User.query.filter_by(email=user_email).first()
-        
+
         # 3. თუ მაინც ვერ ვიპოვეთ, ვქმნით ახალ მომხმარებელს
         if not user:
-            # ვამოწმებთ არის თუ არა ეს ტელეფონი სხვა მომხმარებელთან
             existing = User.query.filter_by(phone=user_phone).first()
             if existing:
                 user = existing
             else:
-                # ვქმნით უნიკალურ email-ს თუ მომხმარებელმა არ მიუთითა
                 if not user_email:
                     user_email = f"user_{datetime.now().strftime('%Y%m%d%H%M%S')}_{user_phone.replace('+', '').replace(' ', '')}@temp.com"
                 else:
-                    # თუ email უკვე არსებობს, ვამატებთ ტელეფონის ნომერს
                     existing_email = User.query.filter_by(email=user_email).first()
                     if existing_email:
                         user_email = f"{user_email.split('@')[0]}_{user_phone.replace('+', '').replace(' ', '')}@{user_email.split('@')[1]}"
-                
+
                 user = User(
                     name=user_name,
                     email=user_email,
@@ -358,7 +348,6 @@ def chat_send():
         if not user:
             return jsonify({'success': False, 'error': 'Could not identify user'}), 400
 
-        # ვპოულობთ ან ვქმნით საუბარს
         conversation = ChatConversation.query.filter_by(user_id=user.id, is_active=True).first()
         if not conversation:
             admin = User.query.filter_by(is_admin=True).first()
@@ -370,7 +359,6 @@ def chat_send():
             db.session.flush()
             print(f"✅ New conversation created for user {user.id}")
 
-        # ხმოვანი შეტყობინების შენახვა
         voice_path = None
         if is_voice:
             voice_data = request.form.get('voice_data')
@@ -389,7 +377,6 @@ def chat_send():
                 except Exception as e:
                     print(f"❌ Error saving voice: {e}")
 
-        # ფაილის შენახვა
         file_path = None
         file_name = None
         if 'file' in request.files:
@@ -405,7 +392,6 @@ def chat_send():
                 file_name = filename
                 print(f"✅ File saved: {file_path}")
 
-        # შეტყობინების შექმნა
         display_text = message_text or (f'[ფაილი: {file_name}]' if file_path else '')
         if is_voice and not message_text:
             display_text = '[ხმოვანი შეტყობინება]'
@@ -425,12 +411,11 @@ def chat_send():
         db.session.add(chat_message)
         db.session.flush()
 
-        # საუბრის განახლება
         conversation.last_message = display_text
         conversation.last_message_time = datetime.now()
         conversation.unread_count += 1
         conversation.updated_at = datetime.now()
-        
+
         db.session.commit()
         print(f"✅ Message saved: {chat_message.id} for user {user.id}")
 
@@ -452,7 +437,7 @@ def chat_send():
 def chat_get_messages():
     try:
         user_id = request.args.get('user_id', type=int)
-        
+
         if current_user.is_authenticated:
             user_id = current_user.id
         elif not user_id:
@@ -467,7 +452,6 @@ def chat_get_messages():
 
         messages = ChatMessage.query.filter_by(user_id=user_id).order_by(ChatMessage.created_at.asc()).all()
 
-        # წავიკითხოთ ადმინის მიერ გაგზავნილი მესიჯები
         for msg in messages:
             if not msg.is_from_user and not msg.is_read:
                 msg.is_read = True
@@ -597,7 +581,6 @@ def admin_chat_messages(user_id):
             ChatMessage.created_at.asc()
         ).all()
 
-        # წავიკითხოთ მომხმარებლის მიერ გაგზავნილი მესიჯები
         for msg in messages:
             if msg.is_from_user and not msg.is_read:
                 msg.is_read = True
@@ -657,7 +640,6 @@ def admin_chat_send():
         if not user:
             return jsonify({'success': False, 'error': 'User not found'}), 404
 
-        # ვპოულობთ ან ვქმნით საუბარს
         conversation = ChatConversation.query.filter_by(user_id=user_id, is_active=True).first()
         if not conversation:
             conversation = ChatConversation(
@@ -667,7 +649,6 @@ def admin_chat_send():
             db.session.add(conversation)
             db.session.flush()
 
-        # ხმოვანი შეტყობინების შენახვა
         voice_path = None
         if is_voice:
             voice_data = request.form.get('voice_data')
@@ -685,7 +666,6 @@ def admin_chat_send():
                 except Exception as e:
                     print(f"Error saving voice: {e}")
 
-        # შეტყობინების შექმნა
         chat_message = ChatMessage(
             user_id=user_id,
             admin_id=current_user.id,
@@ -699,7 +679,6 @@ def admin_chat_send():
         db.session.add(chat_message)
         db.session.flush()
 
-        # საუბრის განახლება
         conversation.last_message = message_text if message_text else '[ხმოვანი შეტყობინება]'
         conversation.last_message_time = datetime.now()
         conversation.unread_count += 1
@@ -821,8 +800,8 @@ def admin_search_users():
         result = []
         for user in users:
             if user.is_admin:
-                continue  # არ ვაჩვენოთ ადმინები
-            
+                continue
+
             conv = ChatConversation.query.filter_by(user_id=user.id, is_active=True).first()
             result.append({
                 'id': user.id,
@@ -918,11 +897,8 @@ def add_product():
         if cloudinary_url:
             image_path = cloudinary_url
         else:
-            filename = secure_filename(image.filename)
-            timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
-            unique_filename = f"{timestamp}_{filename}"
-            image.save(os.path.join(app.config['UPLOAD_FOLDER'], 'products', unique_filename))
-            image_path = f'uploads/products/{unique_filename}'
+            flash('ფოტოს ატვირთვა ვერ მოხერხდა. გთხოვთ სცადოთ თავიდან.', 'error')
+            return redirect(url_for('admin_products'))
     else:
         image_path = 'uploads/default.jpg'
 
@@ -947,18 +923,7 @@ def add_product():
                     display_order=idx
                 )
                 db.session.add(product_image)
-            else:
-                filename = secure_filename(img.filename)
-                timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
-                unique_filename = f"product_{product.id}_{timestamp}_{idx}_{filename}"
-                img_path = os.path.join(app.config['UPLOAD_FOLDER'], 'products', unique_filename)
-                img.save(img_path)
-                product_image = ProductImage(
-                    product_id=product.id,
-                    image_path=f'uploads/products/{unique_filename}',
-                    display_order=idx
-                )
-                db.session.add(product_image)
+            # თუ ვერ ატვირთა — უბრალოდ გამოტოვე (არ შეინახო ლოკალურად)
 
     db.session.commit()
     flash('Product added successfully', 'success')
@@ -988,20 +953,13 @@ def edit_product(product_id):
                     delete_from_cloudinary(public_id)
                 except:
                     pass
-            elif product.image and product.image != 'uploads/default.jpg':
-                old_path = os.path.join(app.config['UPLOAD_FOLDER'], 'products', os.path.basename(product.image))
-                if os.path.exists(old_path):
-                    os.remove(old_path)
 
             cloudinary_url = upload_to_cloudinary(image, 'products/main')
             if cloudinary_url:
                 product.image = cloudinary_url
             else:
-                filename = secure_filename(image.filename)
-                timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
-                unique_filename = f"{timestamp}_{filename}"
-                image.save(os.path.join(app.config['UPLOAD_FOLDER'], 'products', unique_filename))
-                product.image = f'uploads/products/{unique_filename}'
+                flash('ფოტოს ატვირთვა ვერ მოხერხდა.', 'error')
+                return redirect(url_for('edit_product', product_id=product.id))
 
         db.session.commit()
         flash('Product updated successfully', 'success')
@@ -1028,10 +986,6 @@ def delete_product(product_id):
             delete_from_cloudinary(public_id)
         except:
             pass
-    elif product.image and product.image != 'uploads/default.jpg':
-        main_path = os.path.join(app.config['UPLOAD_FOLDER'], 'products', os.path.basename(product.image))
-        if os.path.exists(main_path):
-            os.remove(main_path)
 
     for img in product.additional_images:
         if img.image_path and 'cloudinary.com' in img.image_path:
@@ -1044,10 +998,6 @@ def delete_product(product_id):
                 delete_from_cloudinary(public_id)
             except:
                 pass
-        else:
-            img_path = os.path.join(app.config['UPLOAD_FOLDER'], 'products', os.path.basename(img.image_path))
-            if os.path.exists(img_path):
-                os.remove(img_path)
 
     db.session.delete(product)
     db.session.commit()
@@ -1277,7 +1227,7 @@ def register():
         if User.query.filter_by(email=email).first():
             flash('Email already registered', 'error')
             return redirect(url_for('register'))
-        
+
         if User.query.filter_by(phone=phone).first():
             flash('Phone number already registered', 'error')
             return redirect(url_for('register'))
